@@ -1,0 +1,8 @@
+.vscode/*
+Debug/*
+Release/*
+.vs/*
+BattleServer/Debug/*
+BattleServer/Release/*
+Client/Debug/*
+Client/Release/*
