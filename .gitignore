@@ -4,5 +4,8 @@ Release/*
 .vs/*
 BattleServer/Debug/*
 BattleServer/Release/*
+BattleServer/x64/*
 Client/Debug/*
 Client/Release/*
+Client/x64/*
+x64/*
