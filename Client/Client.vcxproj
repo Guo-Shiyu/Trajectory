@@ -130,6 +130,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>D:\GitBranch\GitHub\Trajectory\lib\hv_static.lib;D:\GitBranch\GitHub\Trajectory\lib\lua54.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <IgnoreSpecificDefaultLibraries>msvcrt.lib;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
+      <LinkStatus>true</LinkStatus>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -151,10 +152,17 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\src\client\init.cpp" />
+    <ClCompile Include="..\src\client\states.cpp" />
+    <ClCompile Include="..\src\client\threads.cpp" />
     <ClCompile Include="Client.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\header\client.h" />
+    <ClInclude Include="..\header\client\init.h" />
+    <ClInclude Include="..\header\fsmdef.h" />
+    <ClInclude Include="..\header\states.h" />
+    <ClInclude Include="..\header\threads.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

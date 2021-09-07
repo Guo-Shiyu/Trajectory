@@ -1,6 +1,9 @@
 ﻿#include "../header/client.h"
+#include "../header/client/init.h"
 #include <future>
 #include <iostream>
+#include <vector>
+#include <coroutine>
 
 void func(sol::state& lua)
 {
@@ -36,6 +39,104 @@ return coroutine.status(co)
 
 }
 
+void load_config(sol::state& lua) {
+	static char rundir[MAX_PATH] = { 0 };
+	static bool loaded_run_dir = false;
+	if (!loaded_run_dir) {
+		get_run_dir(rundir, sizeof(rundir)),
+		loaded_run_dir = true;
+	}
+	std::string dir{ rundir };
+	dir.erase(dir.find_last_of('\\') - 1, dir.back());
+	dir += "\\resource\\auto.lua";
+	auto result = lua.load_file(dir);
+	std::cout << static_cast<int>(result.status()) << std::endl;
+}
+
+void init_lstate(sol::state* state) {
+	std::cout << "=== passing arguments to scripts ===" << std::endl;
+
+	sol::state lua;
+	lua.open_libraries();
+	lua.set_function("bezier", polybezier);
+	lua.set_function("circle", circle);
+
+	const auto& my_script = R"(
+local a,b= ...
+print(a,b)
+bezier(a, b)
+	)";
+
+	sol::load_result fx = lua.load(my_script);
+	sol::function a = fx.get<sol::function>();
+	std::function<void(POINT*, int)> b = fx.get<decltype(b)>();
+	a(1, 2);
+	if (!fx.valid()) {
+		sol::error err = fx;
+		std::cerr << "failed to load string-based script into the program" << err.what() << std::endl;
+	}
+	int x = 0;
+	int* iptr = &x;
+	// prints "your arguments here"
+	fx("your", "arguments", "here");
+	fx(1, 1.1, "s23");
+	fx(iptr, 1.1, "s23");
+	POINT pts[] = { {150, 200}, {160, 150}, {240, 150}, {250, 100}, {400, 150}, {500, 150}, {400, 300} };
+	std::vector<POINT> pt2s = { {3000, 100}, {400, 150}, {500, 150}, {400, 300} };
+	POINT pt3s[] = { {100, 200}, {200, 150}, {300, 150}, {400, 500} };
+	sol::function other_fx = lua["bezier"];
+	std::function<void(POINT*, int)> cpp_bezier = other_fx;
+
+
+	static auto scr = R"(
+local co = coroutine.create(
+function()
+local x, y = 200, 200 
+local start_r = 100
+local step = 20
+	for i = 1, 10 do
+		circle(x, y, start_r)
+		start_r = start_r + step
+		coroutine.yield()
+	end
+end
+)
+return co
+)";
+	sol::object co_obj = lua.script(scr);
+	std::function<void()> co_func = co_obj.as<decltype(co_func)>();
+
+
+	initgraph(2000, 1200);
+	setlinecolor(DARKGRAY);
+	polyline(pts, 7);		// 画灰色的辅助线
+	setlinecolor(GREEN);
+	fx(pts, 7);
+	fx(pt2s.data(), pt2s.size());
+	setlinecolor(YELLOW);
+	cpp_bezier(pt2s.data(), pt2s.size());
+	b(pt3s, 4);
+
+	for (size_t i = 0; i < 9; i++)
+	{
+		co_func();
+		Sleep(50);
+	}
+	_getch();				// 按任意键退出
+	closegraph();
+}
+
+template<typename T>
+class A {
+	T x,
+public:
+	static int a_int;
+};
+
+class B :public A<int> {
+public:
+	static int b_int;
+};
 
 int main()
 {
@@ -47,65 +148,7 @@ int main()
 	std::cout << version << std::endl;
 	std::cout << run_dir << std::endl;
     std::cout << "Hello World!\n";
+	std::cout << &B::b_int << std::endl;
 
-	sol::state lua;
-	int z = 0;
-	lua.open_libraries(sol::lib::base, sol::lib::package);
-	lua.open_libraries();
-	lua.set_function("circle", [](int x, int y, int r) { circle(x, y, r); });
-	lua.script("print(type(coroutine))");
-	std::cout << lua.memory_used() << std::endl;
-	_getch();
-	
-
-	json j_no_init_list = json::array();
-	json j_empty_init_list = json::array({});
-	json j_nonempty_init_list = json::array({ 1, 2, 3, 4 });
-	json j_list_of_pairs = json::array({ {"one", 1}, {"two", 2} });
-
-	// serialize the JSON arrays
-	std::cout << j_no_init_list << '\n';
-	std::cout << j_empty_init_list << '\n';
-	std::cout << j_nonempty_init_list << '\n';
-	std::cout << j_list_of_pairs << '\n';
-
-	srand((unsigned)time(NULL));
-
-	// 初始化图形模式
-	//initgraph(640, 480);
-
-	//int  x, y;
-	//char c;
-
-	//settextstyle(16, 8, _T("Courier"));	// 设置字体
-
-	//// 设置颜色
-	//settextcolor(GREEN);
-	//setlinecolor(BLACK);
-
-	//for (int i = 0; i <= 479; i++)
-	//{
-	//	// 在随机位置显示三个随机字母
-	//	for (int j = 0; j < 3; j++)
-	//	{
-	//		x = (rand() % 80) * 8;
-	//		y = (rand() % 20) * 24;
-	//		c = (rand() % 26) + 65;
-	//		outtextxy(x, y, c);
-	//	}
-
-	//	// 画线擦掉一个像素行
-	//	line(0, i, 639, i);
-
-	//	Sleep(10);					// 延时
-	//	if (i >= 479)	i = -1;
-	//	if (_kbhit())	break;		// 按任意键退出
-	//}
-
-	//// 关闭图形模式
-	//closegraph();
 	return 0;
-	
-
-    std::cout << "Hello World!\n";
 }

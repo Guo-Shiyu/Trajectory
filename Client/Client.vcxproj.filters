@@ -18,9 +18,30 @@
     <ClCompile Include="Client.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\client\init.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\client\states.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\client\threads.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\header\client.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\header\client\init.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\header\fsmdef.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\header\states.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\header\threads.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

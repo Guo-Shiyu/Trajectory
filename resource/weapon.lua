@@ -1,0 +1,5 @@
+local weapon = {
+    
+}
+
+return weapon

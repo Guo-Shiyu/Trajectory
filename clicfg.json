@@ -1,0 +1,8 @@
+{
+    "MainScreen" : {
+        "Hight" : 900,
+        "Width" : 1500,
+        "DefaultFps"    : 60,
+        "MoreFps"   : 100
+    }
+}
