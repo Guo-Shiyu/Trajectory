@@ -7,7 +7,7 @@
  - [sol2](https://github.com/ThePhD/sol2) : C++ library binding for Lua
  # 进度记录(~~交作业用~~)
  20-08-30: 创建项目  
- 20-09-01: 开发环境配置完成, 外部依赖可以正常使用
+ 20-09-01: 开发环境配置完成, 外部依赖可以正常使用  
  20-09-09: 类结构基本搭建完成, 开始实现逻辑
 
  # 目录结构
@@ -22,7 +22,7 @@
             |- client
                 |- character.h      (GameInfo)定义
                 |- interface.h      接口定义
-                |- msgdispatch.h    消息分派器定义
+                |- msgdispatch.h    消息分派器, 日志定义
                 |- state.h          特化状态机定义
                 |- thread.h         R, N, U 工作线程定义
             |- ...              第三方库头文件夹
@@ -99,13 +99,14 @@
  服务器与客户端间的通信格式均为 `JSON`  
  各个字段定义参见 `PROTO.md`
 
- # 实现思路
+ # 实现思路  
+ 参见 `inspiration.md`
  
  ## 客户端
  客户端需要三个线程
- - 通信线程 IO
- - 工作线程 W
- - 绘制线程 R 
+ - 通信线程 N (NetIO)
+ - 操作线程 U (UserIO)
+ - 绘制线程 R (Render)
  
  ### 绘制线程 R (文中的 `渲染` 也表达绘制图像的意思)  
   
