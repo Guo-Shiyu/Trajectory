@@ -126,18 +126,6 @@ return co
 	closegraph();
 }
 
-template<typename T>
-class A {
-	T x,
-public:
-	static int a_int;
-};
-
-class B :public A<int> {
-public:
-	static int b_int;
-};
-
 int main()
 {
 
@@ -148,7 +136,7 @@ int main()
 	std::cout << version << std::endl;
 	std::cout << run_dir << std::endl;
     std::cout << "Hello World!\n";
-	std::cout << &B::b_int << std::endl;
+	hlogd("{%d}", 123);
 
 	return 0;
 }

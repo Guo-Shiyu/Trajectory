@@ -130,7 +130,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>D:\GitBranch\GitHub\Trajectory\lib\hv_static.lib;D:\GitBranch\GitHub\Trajectory\lib\lua54.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <IgnoreSpecificDefaultLibraries>msvcrt.lib;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
-      <LinkStatus>true</LinkStatus>
+      <LinkStatus>false</LinkStatus>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -152,17 +152,19 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\src\client\init.cpp" />
-    <ClCompile Include="..\src\client\states.cpp" />
-    <ClCompile Include="..\src\client\threads.cpp" />
-    <ClCompile Include="Client.cpp" />
+    <ClInclude Include="..\header\client.h" />
+    <ClInclude Include="..\header\client\character.h" />
+    <ClInclude Include="..\header\client\interface.h" />
+    <ClInclude Include="..\header\client\msgdispatch.h" />
+    <ClInclude Include="..\header\client\states.h" />
+    <ClInclude Include="..\header\client\threads.h" />
+    <ClInclude Include="..\header\fsmdef.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\header\client.h" />
-    <ClInclude Include="..\header\client\init.h" />
-    <ClInclude Include="..\header\fsmdef.h" />
-    <ClInclude Include="..\header\states.h" />
-    <ClInclude Include="..\header\threads.h" />
+    <ClCompile Include="..\src\client\character.cpp" />
+    <ClCompile Include="..\src\client\main.cpp" />
+    <ClCompile Include="..\src\client\states.cpp" />
+    <ClCompile Include="..\src\client\threads.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

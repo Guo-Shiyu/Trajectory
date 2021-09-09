@@ -1,13 +1,21 @@
-#include <graphics.h>
-#include <conio.h>
-#include "../../header/client/test.h"
+
+
+template<typename T>
+class base {
+	T x;
+};
+
+class derive : public base<int> {
+	int y;
+};
+
+int fun(base<int>* b) {
+	return 1;
+}
 
 int main() 
 {
-	initgraph(640, 480);
-	circle(200, 200, 100);
-	_getch();
-	closegraph();
-	sub_test(4, 3);
+	derive* d = new derive();
+	int x = fun(d);
 	return 0;
 }

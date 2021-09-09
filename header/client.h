@@ -1,52 +1,39 @@
-#include "sol/config.hpp"
-#include "sol/forward.hpp"
-#include "sol/sol.hpp"
+#pragma once
 
-#include "json/json.hpp"
-using json = nlohmann::json;
-
-#include "hv/hv.h"
-#include "hv/singleton.h"
-#include "hv/hstring.h"
-#include "hv/EventLoopThread.h"
-#include "hv/TcpClient.h"
-
-#include <conio.h>
-#include <cstdlib>
-#include <ctime>
-#include <functional>
-using InputFiliter = std::function<bool(const ExMessage&)>;
-
-#include <mutex>
-#include <atomic>
-
-#include <easyx.h>
-
-#include "fsmdef.h"
+#include "client/interface.h"
 #include "client/states.h"
 #include "client/threads.h"
 #include "client/character.h"
+#include "client/msgdispatch.h"
+#include "client/clientdef.h"
 
+class Client : public MsgInterface, public InitInterface {
+public:
+    using SelfState = StateMachine<Client>;
 
-class Client {
-    public:
-    using SelfState = StateBase<Client>;
+private:
+    SelfState* stm_;
+    GameInfo* game_;
+    Render* render_;
+    NetIO* net_;
+    UserIO* uio_;
 
-    private:
-    SelfState*  state_;
-    GameInfo    game_;
-    Render      render_;
-    NetIO       net_;
-    UserIO      uio_;
-
-    public:
+public:
     static json setting_;
+    static json self_;
 
-    public:
-    Client();
+public:
+    Client() : stm_(nullptr), game_(nullptr), render_(nullptr), 
+            net_(nullptr), uio_(nullptr) {}
 
-    // run each thread &&
-    void start();
+    SelfState* get_state() const noexcept { return this->stm_; }
+    GameInfo* get_game_info() const noexcept { return this->game_; }
+    Render* get_render() const noexcept { return this->render_; }
+    NetIO* get_netio() const noexcept { return this->net_; }
+    UserIO* get_uio() const noexcept { return this->uio_; }
+
+    // run each thread
+    void shine() noexcept;
 
     // load and dispatch JSON settings to derived-class
     static void prepare_for_light();
@@ -54,13 +41,19 @@ class Client {
     // Client::new();  singleton pattern
     static Client* i_say_there_would_be_light();
 
-    private:
-    // call each init func of member and initialize self
-    void init_client();
+    void on_msg(Message& m) override final;
+    void send_msg_to(Recvable target, Recvable self, Message& m) override final;
+    
+    // check net / setting / lua script is all right
+    void check() override final;
 
     // call each stop func of member and log to screen
     void stop_client();
 
-    // check net / setting / lua script is all right
-    bool check_condition();
+
+    void on_crash();
+private:
+    // call each init func of member and initialize self
+    Client* init_self() noexcept override final;
 };
+

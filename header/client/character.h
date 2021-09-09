@@ -1,5 +1,12 @@
 #pragma once
-#include "client.h"
+#include "../hv/singleton.h"
 
 class GameInfo {
+    SINGLETON_DECL(GameInfo)
+    
+    private:
+    int x;
+     
+    public:
+    GameInfo();
 };
