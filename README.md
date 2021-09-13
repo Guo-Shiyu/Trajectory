@@ -8,7 +8,7 @@
  # 进度记录(~~交作业用~~)
  20-08-30: 创建项目  
  20-09-01: 开发环境配置完成, 外部依赖可以正常使用  
- 20-09-09: 类结构基本搭建完成, 开始实现逻辑
+ 20-09-09: 类结构基本搭建完成, 开始实现逻辑   
  20-09-13: 协程绘图单元测试完成
 
  # 目录结构
@@ -43,47 +43,10 @@
                 |-
             |- script           脚本文件
                 |-
-        |- sercfg.lua       战斗服务器配置文件
+        |- sercfg.lua        战斗服务器配置文件
         |- clicfg.json       客户端配置文件
  ~~~
 
- # 开发环境搭建
- 依次按照如下步骤安装， 默认使用 VS2019 
- - 使用官网自动安装程序安装 EazyX  
- [EazyX 官网地址](https://easyx.cn/)  
- [EazyX 文档地址](https://docs.easyx.cn/zh-cn/intro)   
- - 下载 Lua 源代码, 并放置到 VS2019 的 `include` 目录下  
- [Lua](https://github.com/lua/lua)  
- 例如, 我的目录结构是
-
- ~~~
-    ..\Microsoft Visual Studio\2019\Community\VC\Auxiliary\VS\include  
-                                                                |- easyx.h
-                                                                |- graphics.h                
-                                                                |- lua.h
-                                                                |- luaxlib.h
-                                                                ...
- ~~~  
- 
- 达到这样的最终效果即可  ~~总不会这也需要教吧~~  
- 在任何 cpp 文件中, 这样的语句
- ~~~
-    #include <lua.h>
- ~~~
- 
- 或是
- 
- ~~~
-    #include <easyx.h>
- ~~~   
- 将不会报错  
- - 从 github 上 clone 该项目到本地  
- 使用 `.sln` 文件打开解决方案, 确保 `Client` 与 `BattleServer` 两个项目中的 `项目->属性` 页中  
- `c/c++ -> 预处理器 -> 输入` 中存在 `HV_STATICLIB` 宏 (引入第三方库)  
- `c/c++ -> 链接器 -> 输入 -> 附加依赖项` 中包含了 `Trajectory\lib` 目录下的所有 `lib` 文件  
- ~~`c/c++ -> 链接器 -> 输入 -> 忽略指定默认库`  中包含 `msvcrt.lib`~~
-
-到这里, 开发环境搭建完成, 编译运行测试程序来测试第三方库能否正常使用
 
 # Architect 
 ## 组成 
@@ -150,7 +113,7 @@
  将 logger 中缓存的数据按一次性输出到 stdout / 文件 中
  暂时没有实现
 
- 此外, 客户端还实现了 develop 模式下输出到屏幕的即时日志
+ 此外, 客户端还实现了 develop 模式下输出到屏幕的即时日志， 仿照游戏 《饥荒》
  
 
  # 客户端
@@ -224,3 +187,44 @@
 
 
  
+ # 开发环境搭建(不完整)
+ 按照依次按照如下步骤安装， 默认使用 VS2019 
+ - 使用官网自动安装程序安装 EazyX  
+ [EazyX 官网地址](https://easyx.cn/)  
+ [EazyX 文档地址](https://docs.easyx.cn/zh-cn/intro)   
+ - 下载 Lua 源代码, 并将其中的.h 文件放置到 VS2019 的 `include` 目录下  
+ [Lua](https://github.com/lua/lua)  
+ 例如, 我的目录结构是
+
+ ~~~
+    ..\Microsoft Visual Studio\2019\Community\VC\Auxiliary\VS\include  
+                                                                |- easyx.h
+                                                                |- graphics.h                
+                                                                |- lua.h
+                                                                |- luaxlib.h
+                                                                ...
+ ~~~  
+ 
+ 达到这样的最终效果即可  ~~总不会这也需要教吧~~  
+ 在任何 cpp 文件中, 这样的语句
+ ~~~
+    #include <lua.h>
+ ~~~
+ 
+ 或是
+ 
+ ~~~
+    #include <easyx.h>
+ ~~~   
+ 将不会报错  
+ 注: 可以通过在 VS2019 的项目设置中选择 C/C++ 头文件包含目录中指定 EasyX 与 Lua 源码所在文件夹, 从而无需污染 VS2019 的库目录, 同时将在 链接器 -> 输入 中添加 编译后的 lua54.lib / easyx.lib 也可起到同样效果.  
+ 动态链接也是同理 ~~(懂得都懂)~~ 
+
+
+ - 从 github 上 clone 该项目到本地  
+ 使用 `.sln` 文件打开解决方案, 确保 `Client` 与 `BattleServer` 两个项目中的 `项目->属性` 页中  
+ `c/c++ -> 预处理器 -> 输入` 中存在 `HV_STATICLIB` 宏 (引入第三方库)  
+ `c/c++ -> 链接器 -> 输入 -> 附加依赖项` 中包含了 `Trajectory\lib` 目录下的所有 `lib` 文件  
+ ~~`c/c++ -> 链接器 -> 输入 -> 忽略指定默认库`  中包含 `msvcrt.lib`~~
+
+到这里, 开发环境搭建完成, 编译运行测试程序来测试第三方库能否正常使用
