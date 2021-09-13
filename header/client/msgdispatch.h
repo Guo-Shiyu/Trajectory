@@ -1,10 +1,9 @@
 #pragma once
 
-#include "../client/interface.h"
+#include <unordered_map>
 
-#include <queue>
-#include <source_location>
-#include <format>
+#include "../client/interface.hpp"
+#include "../hv/htime.h"
 
 class Message 
 {
@@ -22,28 +21,39 @@ class MsgDispatcher
     std::unordered_map<Recvable, MsgInterface*> map_;
 };
 
-class Logger
+enum class CheckResult : size_t
 {
-private:
-    static std::queue<std::string> log_;
-public:
-    template<typename Fmt, typename ... Args>
-    static void log_gen(Fmt&& f, std::source_location loc, Args&& ...arg)
-    {
-        static std::string str{ 128 };
-        static std::mutex smtx;
-        {
-            smtx.lock();
-            str.append(std::format("-{:13} :{:3} :{:15}:, \n\t--info:"), loc.file_name(), loc.line(), loc.function_name());
-            log_.push(str.append(std::format(f, arg...)));
-            str.clear();
-            smtx.unlock();
-        }
-    }
-
-    // print log to console
-    static void log_dump();
+    NetConnectFail = 0,
+    LoginServNoReply = 1,
 };
 
-#define clog(fmt, ...) \
-Logger::log_gen(fmt, std::source_location::current(), __VA_ARGS__)
+template <typename Key, typename Value, std::size_t Size>
+struct Map {
+    std::array<std::pair<Key, Value>, Size> data;
+
+    [[nodiscard]] // should not discard return value
+    constexpr Value at(const Key &key) const noexcept {
+        const auto itr =
+            std::find_if(std::begin(data), std::end(data),
+                         [&key](const auto &v) { return v.first == key; });
+        if (itr != std::end(data)) {
+            return itr->second;
+        } else {
+            return "unkown error condition";
+        }
+    }
+};
+
+using namespace std::literals::string_view_literals;
+static constexpr std::array<std::pair<CheckResult, std::string_view>, 8U> kerr_map{
+    {   {CheckResult::NetConnectFail,       "Open \"clicfg.json\" failed "},
+        {CheckResult::LoginServNoReply,     "Login Server no reply"},
+        {CheckResult::NetConnectFail, "Open \"clicfg.json\" failed "},
+        {CheckResult::NetConnectFail, "Open \"clicfg.json\" failed "},
+        {CheckResult::NetConnectFail, "Open \"clicfg.json\" failed "},
+        {CheckResult::NetConnectFail, "Open \"clicfg.json\" failed "},
+        {CheckResult::NetConnectFail, "Open \"clicfg.json\" failed "},
+        {CheckResult::NetConnectFail, "Open \"clicfg.json\" failed "}   }};
+
+// i need [!(no_mangeling)]
+std::string_view as_str(const CheckResult sv);

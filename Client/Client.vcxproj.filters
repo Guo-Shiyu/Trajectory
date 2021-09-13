@@ -18,10 +18,10 @@
     <ClInclude Include="..\header\client.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="..\header\client\character.h">
+    <ClInclude Include="..\header\client\game.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="..\header\client\interface.h">
+    <ClInclude Include="..\header\client\interface.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="..\header\client\msgdispatch.h">
@@ -34,6 +34,9 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="..\header\fsmdef.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\header\log.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
@@ -50,5 +53,22 @@
     <ClCompile Include="..\src\client\threads.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\client\client.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\client\msgdispatch.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\client\game.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="clicfg.json">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="auto.lua">
+      <Filter>资源文件</Filter>
+    </None>
   </ItemGroup>
 </Project>

@@ -1,8 +1,24 @@
 {
-    "MainScreen" : {
-        "Hight" : 900,
-        "Width" : 1500,
-        "DefaultFps"    : 60,
-        "MoreFps"   : 100
+    "Render" : {
+        "MainScreen" : {
+            "Hight" : 900,
+            "Width" : 1500,
+            "Fps"   : 100
+        },
+
+        "StartWithLog" : true
+    },
+
+    "NetIO" : {
+        "SelfPort"  : 24680,
+        "TargetHost"    : "172.0.0.1", 
+        "Init" : {
+            "NetCheckSite" : "www.baidu.com",
+            "MaxDisConnectTime" : 1000
+        }
+    },
+
+    "UserIO" : {
+
     }
 }

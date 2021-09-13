@@ -17,7 +17,6 @@ namespace state {
         IMPL_STATE(Prepare)
         void Prepare::into(Client* c) 
         {   
-            c->get_render();
         }
 
         void Prepare::on(Client* c)

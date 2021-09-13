@@ -1,0 +1,4 @@
+{
+    "RuntimeDir" : "",   // exe dir
+    "Check" : true,      // check flag
+}

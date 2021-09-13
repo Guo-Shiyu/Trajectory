@@ -238,11 +238,12 @@ class StateMachine {
     // change state to new state
     void into(const StatePtr new_state) noexcept
     {
-        if(!this->cur_) this->cur_->off(this->owner_);
+        if(this->cur_ != nullptr) this->cur_->off(this->owner_);
         this->set_current(new_state);
         this->cur_->into(this->owner_);
     }
 
+    // warp of StateBase<T>::on
     void execute() 
     {
         this->cur_->on(this->owner_);

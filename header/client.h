@@ -1,11 +1,11 @@
 #pragma once
 
-#include "client/interface.h"
+
+#include <cassert>
+
 #include "client/states.h"
 #include "client/threads.h"
-#include "client/character.h"
 #include "client/msgdispatch.h"
-#include "client/clientdef.h"
 
 class Client : public MsgInterface, public InitInterface {
 public:
@@ -41,8 +41,9 @@ public:
     // Client::new();  singleton pattern
     static Client* i_say_there_would_be_light();
 
-    void on_msg(Message& m) override final;
-    void send_msg_to(Recvable target, Recvable self, Message& m) override final;
+    void on_msg(const Recvable sender, Message&& m) override final;
+    
+    void send_msg_to(Recvable target, Recvable self, Message&& m) override final;
     
     // check net / setting / lua script is all right
     void check() override final;
@@ -50,7 +51,7 @@ public:
     // call each stop func of member and log to screen
     void stop_client();
 
-
+    // as it's name
     void on_crash();
 private:
     // call each init func of member and initialize self
