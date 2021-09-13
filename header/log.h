@@ -7,20 +7,17 @@
 
 namespace Logger {
 
-    extern std::queue<std::string> log_;
+    extern std::queue<std::string> logger;
 
-    template<typename Fmt, typename ... Args>
+    template<typename Fmt, typename ... Args> inline 
     void log_gen(Fmt&& f, const std::source_location&& loc, Args&& ...arg)
     {
-        std::string str{};
-        str.reserve(128U);
+        std::string logstr{}; logstr.reserve(128U);
         auto cur = datetime_now();
-        
-            str.append(std::format("-- {:2}:{:2}:{:2}:{:4}\t-{:13} :{:3} :{:15}:, \n\t--info:", 
-                       cur.hour, cur.min, cur.sec, cur.ms,
-                       loc.file_name(), loc.line(), loc.function_name()));
-        log_.push(str.append(std::format(f, arg...)));
-        
+        logstr.append(std::format("-- {:2}:{:2}:{:2}:{:4}\t-{:13} :{:3} :{:15}:, \n\t--info:", 
+                   cur.hour, cur.min, cur.sec, cur.ms,
+                   loc.file_name(), loc.line(), loc.function_name()));
+        logger.push(std::move(logstr.append(std::format(f, arg...))));
     }
 
     // print log to console

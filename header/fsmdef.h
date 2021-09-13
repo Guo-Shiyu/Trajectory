@@ -1,7 +1,8 @@
 #pragma once
-#include <string>
 
-#define MACRO_RULES   				// marker for precedural macro 
+#include <string>
+#include <functional>
+
 #define _MACRO_USE_(stmt)	stmt	// explict use precedural macro
 
 //MACRO_RULES // expand an arg with designed macro rule 
@@ -163,18 +164,6 @@
 //GEN_VFNS_WITH_5(ret_t, arg_t, field_1, _2, _3, _4, _5)		\
 //CLASS_END
 
-#include <functional>
-
-template<class C>
-class StateBase {
-    public:
-    using StateExecutor = std::function<void(C*)>;
-    virtual void into(C* )  = 0;
-    virtual void on(C* )    = 0;
-    virtual void off(C* )   = 0;
-    virtual ~StateBase() {};
-};
-
 #define GEN_STATE(base, arg_t,  self) \
 class self : public base {  \
     public:                 \
@@ -208,6 +197,16 @@ GEN_STATE_5(base, arg, _2, _3, _4, _5, _6)    \
 #define GEN_STATE_7(base, arg, _1, _2, _3, _4, _5, _6, _7) \
 GEN_STATE(base, arg, _1)         \
 GEN_STATE_6(base, arg, _2, _3, _4, _5, _6, _7)    \
+
+template<class C>
+class StateBase {
+    public:
+    using StateExecutor = std::function<void(C*)>;
+    virtual void into(C* )  = 0;
+    virtual void on(C* )    = 0;
+    virtual void off(C* )   = 0;
+    virtual ~StateBase() {};
+};
 
 template<class T>
 class StateMachine {
