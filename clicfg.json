@@ -6,7 +6,8 @@
             "Fps"   : 100
         },
 
-        "StartWithLog" : true
+        "StartWithLog" : true,
+        "ResourcePath" : "D:\\GitBranch\\GitHub\\Trajectory\\resource"
     },
 
     "NetIO" : {

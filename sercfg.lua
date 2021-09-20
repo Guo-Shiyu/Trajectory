@@ -1,7 +1,6 @@
 local setting = {
-    BattleField = {
-        
-    }
+    BattleField = "0x123"
 }
 
-return setting
+print(setting.BattleField)
+print(setting["BattleField"])

@@ -1,6 +1,7 @@
 #pragma once
 #include <mutex>
 #include "../fsmdef.h"
+//#include "../client.h"
 #include "msgdispatch.h"
 
 class Client;

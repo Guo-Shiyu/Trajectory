@@ -1,3 +1,0 @@
-2021-09-12 20:49:33.102 INFO  EventLoopThread started, tid=33168 [EventLoopThread.h:87:hv::EventLoopThread::loop_thread]
-2021-09-12 20:52:03.780 INFO  EventLoopThread started, tid=42876 [EventLoopThread.h:87:hv::EventLoopThread::loop_thread]
-2021-09-12 20:53:37.475 INFO  EventLoopThread started, tid=39040 [EventLoopThread.h:87:hv::EventLoopThread::loop_thread]

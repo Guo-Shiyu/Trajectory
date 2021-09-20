@@ -1,5 +1,7 @@
 #include "../../header/client.h"
 
+std::queue<std::string> Logger::logger {};
+
 json Client::setting_{};
 json Client::self_{};
 
@@ -14,14 +16,16 @@ void Client::prepare_for_light()
 
     // load JSON config to setting
     std::fstream in {"clicfg.json", std::ios::in};
-    assert(in.is_open(), as_str(ErrCondi::ConfigOpenFail));
+    //assert(in.is_open(), as_str(ErrCondi::ConfigOpenFail));
     const json& cfg = (in >> Client::setting_, Client::setting_);
+    clog("client config:\n{}", cfg.dump(4));
     Render::setting_ = cfg["Render"];
     NetIO::setting_ = cfg["NetIO"];
     UserIO::setting_ = cfg["UserIO"];
 
+
     // set check flag true 
-    Client::self_["Check"] = true;
+    //Client::self_["Check"] = true;
 }
 
 Client* Client::init_self() noexcept
@@ -46,10 +50,9 @@ void Client::check()
 
 void Client::shine() noexcept
 {
+    this->stm_->into(state::client::Prepare::instance());
     try
     {
-        this->init_self()->check();
-        this->stm_->into(state::client::Prepare::instance());
         while(not this->stm_->in_state(state::client::Wrong::instance()))
             this->stm_->execute();
     }
@@ -57,10 +60,10 @@ void Client::shine() noexcept
     {
         clog("catch std::exception:{}", e.what());
     }
-    catch(std::string_view reason)   // check fail wiil throw a const char* explain
+    catch(const CheckResult reason)   // check fail wiil throw a const char* explain
     {
-        clog("check before running failed, reason: {}", reason);
-        Client::self_["CheckFailReason"] = std::move(reason);
+        clog("check before running failed, reason: {}", as_str(reason));
+        Client::self_["CheckFailReason"] = as_str(reason);
     }
     catch(...)
     {
@@ -71,11 +74,23 @@ void Client::shine() noexcept
     this->stm_->into(state::client::Wrong::instance());
 }
 
-Client* Client::i_say_there_would_be_light()
+void Client::start() noexcept
 {
-    static Client c;
-    return &c;
+    this->get_netio()->start();
+    this->get_uio()->start();
+    this->get_render()->start();
 }
+
+void Client::on_crash() noexcept
+{
+    this->get_render()->stop();
+    // this->get_uio()->stop();
+    // this->get_nio()->stop();
+
+    Logger::log_dump();
+}
+
+
 
 void Client::on_msg(const Recvable sender, Message&& m)
 {
@@ -88,4 +103,10 @@ void Client::send_msg_to(const Recvable target, const Recvable self, Message&& m
 }
 
 
-std::queue<std::string> Logger::log_{};
+Client* Client::i_say_there_would_be_light()
+{
+    static Client* c;
+    if (c == nullptr)
+        c = new Client();
+    return c->init_self();
+}

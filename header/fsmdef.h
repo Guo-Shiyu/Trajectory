@@ -1,5 +1,6 @@
 #pragma once
 
+#include "log.h"
 #include <string>
 #include <functional>
 
@@ -205,6 +206,7 @@ class StateBase {
     virtual void into(C* )  = 0;
     virtual void on(C* )    = 0;
     virtual void off(C* )   = 0;
+    virtual constexpr std::string as_str() { return "StateBase"; };
     virtual ~StateBase() {};
 };
 
@@ -230,7 +232,10 @@ class StateMachine {
     void set_previous(const StatePtr p) noexcept { this->pre_ = p; }
 
     void set_current(StatePtr s) noexcept 
-    { this->pre_ = this->cur_, this->cur_ = s; }
+    { 
+        this->pre_ = this->cur_;
+        this->cur_ = s; 
+    }
     
     void set_global(const StatePtr g) noexcept { this->global_ = g; }
 
@@ -239,12 +244,16 @@ class StateMachine {
     {
         if(this->cur_ != nullptr) this->cur_->off(this->owner_);
         this->set_current(new_state);
+        clog("change state, from: {}, into: {}",
+            this->pre_ == nullptr ? "NullState" : this->pre_->as_str(),
+            this->cur_->as_str());
         this->cur_->into(this->owner_);
     }
 
     // warp of StateBase<T>::on
     void execute() 
     {
+        clog("execute state, on:{}", this->cur_->as_str());
         this->cur_->on(this->owner_);
     }
 

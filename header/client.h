@@ -1,9 +1,8 @@
 #pragma once
 
-
 #include <cassert>
 
-#include "client/states.h"
+//#include "client/states.h"
 #include "client/threads.h"
 #include "client/msgdispatch.h"
 
@@ -48,13 +47,15 @@ public:
     // check net / setting / lua script is all right
     void check() override final;
 
-    // call each stop func of member and log to screen
-    void stop_client();
+    // call each start
+    void start() noexcept;
 
-    // as it's name
-    void on_crash();
-private:
+    // call each stop func of member and log to screen
+    void on_crash() noexcept;
+    
     // call each init func of member and initialize self
     Client* init_self() noexcept override final;
+
+private:
 };
 

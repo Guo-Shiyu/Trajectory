@@ -5,8 +5,7 @@ class GameInfo {
     SINGLETON_DECL(GameInfo)
     
     private:
-    int x;
      
     public:
-    GameInfo() : x(0) {}
+    GameInfo() {}
 };

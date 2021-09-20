@@ -17,7 +17,7 @@ enum class Recvable : size_t
     C = 0,  // client
     R = 1,  // render
     N = 2,  // net io
-    U = 1,  // user io
+    U = 3,  // user io
 };
 
 class Message;
@@ -28,3 +28,7 @@ class MsgInterface
     virtual void send_msg_to(const Recvable target, const Recvable self, Message&& m) = 0;
 };
 
+// namespace default 
+// {
+    
+// } // namespace default
