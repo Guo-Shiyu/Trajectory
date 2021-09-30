@@ -9,3 +9,5 @@ Client/Debug/*
 Client/Release/*
 Client/x64/*
 x64/*
+*.log
+*.log

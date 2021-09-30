@@ -2,7 +2,6 @@
 
 #include "log.h"
 #include <string>
-#include <functional>
 
 #define _MACRO_USE_(stmt)	stmt	// explict use precedural macro
 
@@ -202,7 +201,6 @@ GEN_STATE_6(base, arg, _2, _3, _4, _5, _6, _7)    \
 template<class C>
 class StateBase {
     public:
-    using StateExecutor = std::function<void(C*)>;
     virtual void into(C* )  = 0;
     virtual void on(C* )    = 0;
     virtual void off(C* )   = 0;

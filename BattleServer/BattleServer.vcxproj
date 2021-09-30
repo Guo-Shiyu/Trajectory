@@ -150,12 +150,6 @@
       <AdditionalDependencies>D:\GitBranch\GitHub\Trajectory\lib\lua54.lib;D:\GitBranch\GitHub\Trajectory\lib\hv_static.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
-  <ItemGroup>
-    <ClCompile Include="BattleServer.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="..\header\battle.h" />
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

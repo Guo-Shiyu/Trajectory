@@ -1,5 +1,5 @@
 #include "../../header/client/states.h"
-#include "../../header/client.h"
+#include "../../header/client/client.h"
 
 #define IMPL_STATE(self)    \
 self* self::instance() {    \
@@ -17,13 +17,13 @@ namespace state {
 
         void Prepare::on(Client* c)
         {
-            c->check();
-            auto net = c->get_netio()->get_state();
-            auto uio = c->get_uio()->get_state();
+            c->ensure();
+            auto net = c->netio()->state();
+            auto uio = c->uio()->state();
             clog("check success, net state:{}, userio state:{}", 
                 net->get_curent()->as_str(), uio->get_curent()->as_str());
             
-            auto state = c->get_state();
+            auto state = c->state();
             if (net->in_state(state::net::Offline::instance()))
                 state->into(state::client::Develop::instance());
             else 
@@ -43,7 +43,7 @@ namespace state {
         void SignIn::on(Client* c)
         {
             Sleep(3000);
-            c->get_state()->into(state::client::Wrong::instance());
+            c->state()->into(state::client::Wrong::instance());
         }
 
         void SignIn::off(Client* c)
@@ -102,7 +102,7 @@ namespace state {
         IMPL_STATE(Wrong)
         void Wrong::into(Client* c)
         {
-            c->on_crash();
+            c->panic();
         }
 
         void Wrong::on(Client* c)
@@ -134,49 +134,49 @@ namespace state {
 
     namespace net {
         IMPL_STATE(Offline)
-        void Offline::into(NetIO* n)
+        void Offline::into(iNetIO* n)
         {
 
         }
 
-        void Offline::on(NetIO* n)
+        void Offline::on(iNetIO* n)
         {
 
         }
 
-        void Offline::off(NetIO* n)
+        void Offline::off(iNetIO* n)
         {
             
         }
 
         IMPL_STATE(ToLoginServ)
-        void ToLoginServ::into(NetIO* n)
+        void ToLoginServ::into(iNetIO* n)
         {
 
         }
 
-        void ToLoginServ::on(NetIO* n)
+        void ToLoginServ::on(iNetIO* n)
         {
 
         }
 
-        void ToLoginServ::off(NetIO* n)
+        void ToLoginServ::off(iNetIO* n)
         {
             
         }
 
         IMPL_STATE(ToBattleServ)
-        void ToBattleServ::into(NetIO* n)
+        void ToBattleServ::into(iNetIO* n)
         {
 
         }
 
-        void ToBattleServ::on(NetIO* n)
+        void ToBattleServ::on(iNetIO* n)
         {
 
         }
 
-        void ToBattleServ::off(NetIO* n)
+        void ToBattleServ::off(iNetIO* n)
         {
             
         }
@@ -185,49 +185,49 @@ namespace state {
     namespace uio {
         IMPL_STATE(Both)
 
-        void Both::into(UserIO* u)
+        void Both::into(iUserIO* u)
         {
 
         }
 
-        void Both::on(UserIO* u)
+        void Both::on(iUserIO* u)
         {
 
         }
 
-        void Both::off(UserIO* u)
+        void Both::off(iUserIO* u)
         {
 
         }
 
         IMPL_STATE(OnlyKey)
-        void OnlyKey::into(UserIO* u)
+        void OnlyKey::into(iUserIO* u)
         {
 
         }
 
-        void OnlyKey::on(UserIO* u)
+        void OnlyKey::on(iUserIO* u)
         {
 
         }
 
-        void OnlyKey::off(UserIO* u)
+        void OnlyKey::off(iUserIO* u)
         {
             
         }
 
         IMPL_STATE(OnlyMouse)
-        void OnlyMouse::into(UserIO* u)
+        void OnlyMouse::into(iUserIO* u)
         {
 
         }
 
-        void OnlyMouse::on(UserIO* u)
+        void OnlyMouse::on(iUserIO* u)
         {
 
         }
 
-        void OnlyMouse::off(UserIO* u)
+        void OnlyMouse::off(iUserIO* u)
         {
             
         }

@@ -15,22 +15,63 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\header\client.h">
+    <ClCompile Include="..\src\client\character.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\client\client.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\client\dispatcher.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\client\game.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\client\main.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\client\netio.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\client\render.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\client\sketcher.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\client\states.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\client\userio.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\header\client\client.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="..\header\client\game.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="..\header\client\interface.hpp">
+    <ClInclude Include="..\header\client\icommunication.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="..\header\client\msgdispatch.h">
+    <ClInclude Include="..\header\client\iinit.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\header\client\iluavm.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\header\client\ithreads.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\header\client\netio.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="..\header\client\states.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="..\header\client\threads.h">
+    <ClInclude Include="..\header\client\userio.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="..\header\fsmdef.h">
@@ -39,36 +80,11 @@
     <ClInclude Include="..\header\log.h">
       <Filter>头文件</Filter>
     </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="..\src\client\character.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\client\main.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\client\states.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\client\threads.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\client\client.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\client\msgdispatch.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\client\game.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="clicfg.json">
-      <Filter>资源文件</Filter>
-    </None>
-    <None Include="auto.lua">
-      <Filter>资源文件</Filter>
-    </None>
+    <ClInclude Include="..\header\client\iconfiguration.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\header\client\render.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

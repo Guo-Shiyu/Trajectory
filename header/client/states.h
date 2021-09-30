@@ -1,12 +1,12 @@
 #pragma once
-#include <mutex>
+
 #include "../fsmdef.h"
-//#include "../client.h"
-#include "msgdispatch.h"
+
+#include <mutex>
 
 class Client;
-class NetIO;
-class UserIO;
+class iNetIO;
+class iUserIO;
 namespace state {
     namespace client {
         using GlobalState = StateBase<Client>;
@@ -18,19 +18,18 @@ namespace state {
     }
 
     namespace net {
-        using NetState = StateBase<NetIO>;
+        using NetState = StateBase<iNetIO>;
         _MACRO_USE_(
-            GEN_STATE_3(NetState, NetIO,
+            GEN_STATE_3(NetState, iNetIO,
                 ToLoginServ, ToBattleServ, Offline
             )
         )
     }
 
-
     namespace uio {
-        using UioState = StateBase<UserIO>;
+        using UioState = StateBase<iUserIO>;
         _MACRO_USE_(
-            GEN_STATE_3(UioState, UserIO,
+            GEN_STATE_3(UioState, iUserIO,
                 Both, OnlyKey, OnlyMouse
             )
         )
