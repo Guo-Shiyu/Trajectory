@@ -36,10 +36,6 @@ public:
     // condig interface
     UserIO *ensure()    noexcept override final;
 
-    // message interface
-    void    response(const ThreadId sender, ProcIndex i, std::optional<ArgsPack> args) noexcept override final;
-    void    notify(const ThreadId sender, ProcIndex i, std::optional<ArgsPack> args) noexcept override final;
-
     // work thread interface
     UserIO *start() noexcept override final;
     UserIO *panic() noexcept override final;

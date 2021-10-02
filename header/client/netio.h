@@ -33,10 +33,6 @@ class NetIO : public iNetIO
     // condig interface
     NetIO*  ensure() noexcept override final;
 
-    // message interface
-    void    response(const ThreadId sender, ProcIndex i, std::optional<ArgsPack> args) noexcept override final;
-    void    notify(const ThreadId sender, ProcIndex i, std::optional<ArgsPack> args) noexcept override final;
-
     // work thread interface
     NetIO*  start() noexcept override final;
     NetIO*  panic() noexcept override final;

@@ -41,8 +41,8 @@ struct Map
 };
 
 using namespace std::literals::string_literals;
-constexpr static std::array<std::pair<ThreadId, std::string_view>, 4U> kthd_map{
-    {
+constexpr static std::array<std::pair<ThreadId, std::string_view>, 4U> 
+    kthd_map{{
         {ThreadId::C, "Client"},
         {ThreadId::R, "Render"},
         {ThreadId::N, "NetIO"},
@@ -132,7 +132,7 @@ public:
         if (index_cache_.size() != 0)
             throw "call map builder: index cache not empty";
         for (auto &i : idxs)
-            index_cache_.push_back(std::move(i));
+            index_cache_.push_back(i);
         return this;
     }
 
@@ -175,7 +175,7 @@ protected:
 
 public:
     // init proc-call map
-    iMsg *generate_map(CallMap &&map)
+    iMsg *set_proccall_map(CallMap &&map)
     {
         this->fnmap_ = std::make_unique<CallMap>(std::forward<CallMap>(map));
     }

@@ -1,24 +1,24 @@
+#include "../../header/hv/hstring.h"
 #include "../../header/client/client.h"
+
+#include <sstream>
 
 std::queue<std::string> Logger::cache_{};
 sol::state iConfig::configer_{};
-std::unordered_map<ThreadId, iMsg*> Dispatcher::map_{};
+std::unordered_map<ThreadId, iMsg *> Dispatcher::map_{};
 
 void Client::prepare_for_light()
 {
     // get runtime dir
-    char dir[MAX_PATH];
-    get_run_dir(dir, sizeof(dir));
-    std::string str{dir};
-    clog("runtime dictionary: {}", str);
+    auto cur = std::filesystem::current_path();
 
     // load config file to setting
-    std::string cfile = str.append("\\clicfg.lua");
-    std::fstream in{cfile, std::ios::in};
-    assert(in.is_open(), as_str(ErrCondi::ConfigOpenFail));
-    auto result = Client::configer().safe_script_file(cfile);
-    assert(result.valid());
-    assert(result.get<bool>());
+    auto project = cur.parent_path();
+    Client::configer().require_file("Config", project.concat("\\clicfg.lua").string());
+    project = project.parent_path();
+
+    // load resource file
+    load_all_mod(&Client::configer(), project.concat("\\resource\\script"));
 }
 
 void Client::shine() noexcept
@@ -81,6 +81,7 @@ Client *Client::i_say_there_would_be_light()
 {
     static Client cli{};
     static std::once_flag oc{};
-    std::call_once(oc, [&](){ cli.lazy_init(); });
+    std::call_once(oc, [&]()
+                   { cli.lazy_init(); });
     return &cli;
 }

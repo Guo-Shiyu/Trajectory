@@ -29,6 +29,11 @@ namespace Logger
                         loc.file_name(), loc.line(), loc.function_name()));
 
         cache_.push(std::move(logstr.append(std::format(f, arg...))));
+
+#ifdef _DEBUG
+        std::cout << cache_.back() << std::endl;
+#endif // _DEBUG
+
         while (cache_.size() >= LOG_QUEUE_SIZE)
             cache_.pop();
     }

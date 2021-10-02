@@ -4,24 +4,16 @@ SINGLETON_IMPL(Render)
 
 Render *Render::lazy_init() noexcept
 {
-
     this->skter_ = new Sketcher();
+    this->skter_->initvm()->regist_action();
+    this->cache_ = new Cache();
+    this->cache_->initvm();
+
     // bind funtion with lua state and show login cartoon
-    this->skter_->initvm()->regist_act();
-    
-    std::string path = this->configer()["ResourcePath"];
-    path = path.append("\\paint\\");
-    auto load_exact_file = [lua = this->sktcher()->luavm(), &path](std::string_view filename, const std::string &modname)
-    {
-        if (not lua->require_file(modname, path.append(filename)).valid())
-            clog("fail to require resource file: {}", path);
-        else
-            path.erase(path.find(filename), path.length());
-    };
-    load_exact_file("color.lua", "Color"),
-    load_exact_file("ani.lua", "Ani"),
-    load_exact_file("object.lua", "Object"),
-    load_exact_file("rscript.lua", "Render");
+    std::string path = this->configer()["Config"]["Client"]["ResourcePath"];
+    std::filesystem::path resources{path};
+
+    load_all_mod(this->skter_->luavm(), resources.concat("\\paint"));
     return this;
 }
 
@@ -40,18 +32,30 @@ Render *Render::start() noexcept
     this->eloop_ = new std::thread(
         [this]()
         {
-            const auto &screen = this->configer()["Render"]["MainScreen"];
-            int width = screen["Width"], hight = screen["Hight"];
+            const auto &screen = this->configer()["Config"]["Render"]["MainScreen"];
+            int width = screen["Width"].get<int>(), hight = screen["Hight"].get<int>();
             int fps = screen["Fps"];
             int expect = 1000 / fps;
             initgraph(width, hight);
             while (true)
             {
                 auto srt = std::chrono::steady_clock::now();
-                this->sktcher()->draw_frame()->try_upload();
+                this->sktcher()->draw_frame();
+                if (this->cacher()->modified())
+                    if (this->cacher()->try_own()) // to owned success
+                        this->sktcher()->update(this->cacher())->upload(this->cacher());
+                // expect to be like this :
+                // if (this->sketcher()->modified())
+                // {
+                //      ProvideType type;
+                //      if (this->cacher()->log_modified()) {
+                //           type = ProvideType::log;
+                //      else if (this->cacher()->task_modified())
+                //           type = ProvideType::task;
+                //      this->sketcher->require(type, this->cacher()->provide(type));
+                // }
 
-                if (auto diff = expect - std::chrono::duration_cast<std::chrono::milliseconds>
-                                        (std::chrono::steady_clock::now() - srt).count(); diff > 0)
+                if (auto diff = expect - std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - srt).count(); diff > 0)
                     Sleep(diff);
                 else
                     continue;
@@ -61,19 +65,12 @@ Render *Render::start() noexcept
     return this;
 }
 
-//#undef max  // to deal with a complie error
 Render *Render::panic() noexcept
 {
-    this->sktcher()->stop()->clear_cache()->clear_object()->clear_task();
+    this->sktcher()->stop()->clear_object()->clear_task();
+
+    this->cacher()->clear_all();
+
     closegraph();
     return this;
-}
-
-// message interface
-void Render::response(const ThreadId sender, ProcIndex i, std::optional<ArgsPack> args) noexcept
-{
-}
-
-void Render::notify(const ThreadId sender, ProcIndex i, std::optional<ArgsPack> args) noexcept
-{
 }

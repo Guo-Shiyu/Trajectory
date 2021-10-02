@@ -10,11 +10,13 @@
 class iRender : public WorkThread<std::nullptr_t, std::thread>, public iLua
 {
 protected:
-    iSketcher *skter_;
-    iRender() : WorkThread(), skter_(nullptr) {}
+    iSketcher*  skter_;
+    iCache*     cache_;
+    iRender() : WorkThread(), skter_(nullptr), cache_(nullptr) {}
 
 public:
-    iSketcher *sktcher() const noexcept { return this->skter_; }
+    iSketcher * sktcher() const noexcept { return this->skter_; }
+    iCache*     cacher() const noexcept { return this->cache_; }
 };
 
 class Render : public iRender
@@ -32,10 +34,6 @@ public:
 
     // condig interface
     Render *ensure() noexcept override final;
-
-    // message interface
-    void    response(const ThreadId sender, ProcIndex i, std::optional<ArgsPack> args) noexcept override final;
-    void    notify(const ThreadId sender, ProcIndex i, std::optional<ArgsPack> args) noexcept override final;
 
     // work thread interface
     Render *start() noexcept override final;

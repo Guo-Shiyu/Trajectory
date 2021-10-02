@@ -80,9 +80,6 @@
     <ClInclude Include="..\header\log.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="..\header\client\iconfiguration.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="..\header\client\render.h">
       <Filter>头文件</Filter>
     </ClInclude>

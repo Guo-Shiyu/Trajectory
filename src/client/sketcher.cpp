@@ -1,22 +1,22 @@
 #include "../../header/client/sketcher.h"
 
-Sketcher *Sketcher::load_resource(std::string &&src, std::string &&mod) noexcept
+Sketcher *Sketcher::initvm() noexcept 
 {
-    this->luavm()->require_script(mod, src);
-    return this;
-}
-
-template<typename... Args>
-Sketcher* Sketcher::submit(std::string&& index, Args... args) noexcept  
-{
-    std::lock_guard g(lock_);
-    *cache_[cache_->size()].create_named(index, args ...);
+    this->open_libraries();
+    this->vm_.create_named_table("LogTable");
+    this->vm_.create_named_table("TaskQue");
     return this;
 }
 
 Sketcher* Sketcher::ensure() noexcept
 {
-    auto result = this->luavm()->operator[]("Ensure").call();
-    assert(result.valid());
+    this->luavm()->operator[]("SketcherEnsure").call();
     return this;
 }
+
+Cache* Cache::ensure() noexcept 
+{
+    this->luavm()->operator[]("CacheEnsure").call();
+    return this;
+}
+

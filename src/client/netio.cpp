@@ -15,13 +15,6 @@ NetIO *NetIO::ensure() noexcept
     return this;
 }
 
-void NetIO::response(const ThreadId sender, ProcIndex i, std::optional<ArgsPack> args) noexcept
-{
-}
-void NetIO::notify(const ThreadId sender, ProcIndex i, std::optional<ArgsPack> args) noexcept
-{
-}
-
 NetIO *NetIO::start() noexcept
 {
     return this;

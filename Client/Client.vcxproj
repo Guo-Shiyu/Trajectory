@@ -34,7 +34,6 @@
     <ClInclude Include="..\header\client\client.h" />
     <ClInclude Include="..\header\client\game.h" />
     <ClInclude Include="..\header\client\icommunication.h" />
-    <ClInclude Include="..\header\client\iconfiguration.h" />
     <ClInclude Include="..\header\client\iinit.h" />
     <ClInclude Include="..\header\client\iluavm.h" />
     <ClInclude Include="..\header\client\ithreads.h" />
@@ -104,7 +103,7 @@
     <LinkIncremental>false</LinkIncremental>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <LinkIncremental>true</LinkIncremental>
+    <LinkIncremental>false</LinkIncremental>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
@@ -158,6 +157,7 @@
       <AdditionalDependencies>D:\GitBranch\GitHub\Trajectory\lib\Debug\hv_static.lib;D:\GitBranch\GitHub\Trajectory\lib\Debug\lua54.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <IgnoreSpecificDefaultLibraries>msvcrt.lib;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
       <LinkStatus>false</LinkStatus>
+      <LinkTimeCodeGeneration>Default</LinkTimeCodeGeneration>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
