@@ -29,8 +29,7 @@ Render *Render::ensure() noexcept
 
 Render *Render::start() noexcept
 {
-    this->cacher()->submit(SubmitType::Ani, "OpenAnimation", 600, 600, sol::nil, sol::nil, 600, sol::nil);
-
+    this->cacher()->submit("OpenAnimation", 600, 600, sol::nil, sol::nil, 600, sol::nil);
     this->eloop_ = new std::thread(
         [this]()
         {
@@ -43,19 +42,14 @@ Render *Render::start() noexcept
             {
                 auto srt = std::chrono::steady_clock::now();
                 this->sktcher()->draw_frame();
-                if (this->cacher()->modified())
-                    if (this->cacher()->try_own()) // to_owned success
-                        this->sktcher()->update(this->cacher())->upload(this->cacher()),this->cacher()->release();
-                // expect to be like this :
-                // if (this->sketcher()->modified())
-                // {
-                //      ProvideType type;
-                //      if (this->cacher()->log_modified()) {
-                //           type = ProvideType::log;
-                //      else if (this->cacher()->task_modified())
-                //           type = ProvideType::task;
-                //      this->sketcher->require(type, this->cacher()->provide(type));
-                // }
+                
+                // check new animation
+                if (auto ani = this->cacher()->animations(); ani.has_value())
+                    this->sktcher()->update(ani.value()), ani.value().clear();
+                
+                // check new log
+                if (auto log = this->cacher()->logs(); log.has_value())
+                    this->sktcher()->upload(log.value()), log.value().clear();
 
                 if (auto diff = expect - std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - srt).count(); diff > 0)
                     Sleep(diff);
@@ -71,7 +65,7 @@ Render *Render::panic() noexcept
 {
     this->sktcher()->stop()->clear_object()->clear_task();
 
-    this->cacher()->clear_all();
+    this->cacher()->clear();
 
     closegraph();
     return this;

@@ -1,14 +1,8 @@
 
 --- render
 local module = {
-    AddRenderTask = function (index, ...)
-        local task = coroutine.create(Ani[index])
-        local result, why = coroutine.resume(task, ...)
-        table.insert(TaskQue, task)
-        print(" -index: "..index)
-        print("lua: AddRenderTask Called result: "..tostring(result).." why: "..tostring(why))
-    end,
-    
+
+    --- fn for sketchers 
     StepRender = function ()
         if #TaskQue > 0 then 
             for k, v in pairs(TaskQue) do
@@ -27,7 +21,7 @@ local module = {
     end,
 
     ShowLog = function ()
-        LogArgs = {
+        local LogArgs = {
             Hight   = 16,
             Width   = 9,
             Font    = "Termianl",
@@ -59,7 +53,12 @@ local module = {
         print("lua: ClearObject called")
     end,
 
-    UploadLog = function ()
+    UploadLog = function (logs)
+        for _, v in pairs(ThreadId) do 
+            if logs[v] ~= nil then 
+                LogTable[v] = logs[v]
+            end
+        end
         print("lua: UploadTask called")
     end,
 
@@ -71,6 +70,20 @@ local module = {
         end
         print("lua: UpdateTask called")
         print("Cache's TaskQue len: "..#queue)
+    end,
+
+    --- fn for cache
+    AddRenderTask = function (index, ...)
+        print("lua: index: "..index)
+        local task = coroutine.create(Ani[index])
+        local result, why = coroutine.resume(task, ...)
+        print("lua: AddRenderTask Called result: "..tostring(result).." why: "..tostring(why))
+        table.insert(TaskCache, task)
+    end,
+
+    AddRenderLog = function (id, logstr)
+        LogCache[id] = logstr
+        print("lua: AddRenderLog called")
     end
 }
 

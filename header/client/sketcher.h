@@ -7,18 +7,6 @@
 #include <atomic>
 #include <mutex>
 
-enum class SubmitType
-{
-    Ani,
-    Obj
-};
-
-enum class ProvideType
-{
-    Log,
-    Task,
-};
-
 class iRenderAssembly : public iLua
 {
 protected:
@@ -75,6 +63,11 @@ public:
         this->vm_.create_named_table("Hatch",
                                      "Cube", HS_CROSS,
                                      "DiagCube", HS_DIAGCROSS);
+        this->vm_.create_named_table("ThreadId",
+            "C", ThreadId::C,
+            "U", ThreadId::U,
+            "N", ThreadId::N,
+            "R", ThreadId::R);
         return this;
     }
 
@@ -91,10 +84,15 @@ public:
 // thread safe cache for sketcher
 class iCache : public iRenderAssembly
 {
+private:
+    static constexpr std::string_view TASKS_CACHE   = "TaskCache";
+    static constexpr std::string_view LOGS_CACHE    = "LogCache";
+    //static constexpr std::string_view SELF_SCRIPT   = "Rscript";
+
 protected:
     std::mutex lock_;
-    bool log_modified_;
-    bool task_modified_;
+    std::atomic_bool log_modified_;
+    std::atomic_bool task_modified_;
 
     iCache() : lock_(), log_modified_(false), task_modified_(false) {}
 
@@ -103,44 +101,69 @@ public:
     iCache *initvm() noexcept
     {
         this->open_libraries();
-        this->vm_.create_named_table("TaskQue");
-        this->vm_.create_named_table("LogCache");
-        this->vm_.create_named_table("SubmitType",
-                                     "Ani", SubmitType::Ani,
-                                     "Obj", SubmitType::Obj);
-        this->vm_.create_named_table("ThreadId",
-                                     "C", ThreadId::C,
-                                     "U", ThreadId::U,
-                                     "N", ThreadId::N,
-                                     "R", ThreadId::R);
+        this->vm_.create_named_table(TASKS_CACHE);
+        this->vm_.create_named_table(LOGS_CACHE);
         return this;
     }
+
+    // bool has_new_log() const noexcept
+    // {
+    //     return this->log_modified_;
+    // }
+
+    // bool has_new_task() const noexcept 
+    // {
+    //     return this->task_modified_;
+    // }
 
     bool modified() const noexcept
     {
         return this->log_modified_ || this->task_modified_;
     }
 
-    std::optional<sol::table> provide(ProvideType t) noexcept
+    std::optional<sol::table> animations() noexcept 
     {
-        bool flag = (t == ProvideType::Log);
         std::optional<sol::table> ret{std::nullopt};
-        if (flag)
-            if (this->log_modified_)
-            {
-                ret = this->vm_["LogCache"].get<decltype(ret)>();
-                this->vm_["LogCache"].set(sol::nil);
-                this->log_modified_ = false;
-            }
-            else if (this->task_modified_)
-            {
-                ret = this->vm_["TaskQue"].get<sol::table>();
-                this->vm_["TaskQue"].set(sol::nil);
-                this->task_modified_ = false;
-            }
-
+        if (this->task_modified_)
+        {
+            sol::table tab = this->vm_[TASKS_CACHE];
+            ret.emplace(std::move(tab)); 
+            this->task_modified_ = false;
+        }
         return ret;
     }
+
+    std::optional<sol::table> logs() noexcept 
+    {
+        std::optional<sol::table> ret{ std::nullopt };
+        if (this->log_modified_) {
+            sol::table tab = this->vm_[LOGS_CACHE];
+            ret.emplace(std::move(tab));
+            this->task_modified_ = false;
+        }
+        return ret;
+    }
+
+    // std::optional<sol::table> provide(ProvideType t) noexcept
+    // {
+    //     bool flag = (t == ProvideType::Log);
+    //     std::optional<sol::table> ret{std::nullopt};
+    //     if (flag)
+    //         if (this->log_modified_)
+    //         {
+    //             ret = this->vm_["LogCache"].get<decltype(ret)>();
+    //             this->vm_["LogCache"].set(sol::nil);
+    //             this->log_modified_ = false;
+    //         }
+    //         else if (this->task_modified_)
+    //         {
+    //             ret = this->vm_["TaskQue"].get<sol::table>();
+    //             this->vm_["TaskQue"].set(sol::nil);
+    //             this->task_modified_ = false;
+    //         }
+
+    //     return ret;
+    // }
 
     // std::optional<sol::table> provide(std::string_view key) noexcept
     // {
@@ -151,12 +174,12 @@ public:
     //     return ret;
     // }
 
-    iCache *prepare(std::string_view key)
-    {
-        std::lock_guard guard{this->lock_};
-        this->vm_.create_named_table(key);
-        return this;
-    }
+    // iCache *prepare(std::string_view key)
+    // {
+    //     std::lock_guard guard{this->lock_};
+    //     this->vm_.create_named_table(key);
+    //     return this;
+    // }
 
     bool try_own() noexcept
     {
@@ -169,34 +192,23 @@ public:
         return this;
     }
 
-    iCache *clear_by_key(std::string_view key) noexcept
+    iCache *clear() noexcept
     {
         std::lock_guard guard{this->lock_};
-        this->vm_[key].set(sol::nil);
-        return this;
-    }
+        sol::table table = this->vm_[TASKS_CACHE];
+        table.clear();
+        
+        table = this->vm_[LOGS_CACHE];
+        table.clear();
 
-    iCache *clear_all() noexcept
-    {
-        this->clear_by_key("LogCache");
-        this->clear_by_key("TaskCache");
         return this;
     }
 
     template <typename... Args> // submit task to task cache
-    iCache *submit(SubmitType type, std::string_view index, Args... args) noexcept
+    iCache *submit(std::string_view index, Args... args) noexcept
     {
         std::lock_guard guard{this->lock_};
-        //sol::table tab = this->vm_["TaskCache"].get<sol::table>();
-        //tab[tab.size() + 1] = this->vm_.create_table();
-        //sol::table task = tab[tab.size()];
-        //task["Type"] = static_cast<size_t>(type);
-        //task["Index"] = index;
-        //task["Args"] = this->vm_.create_table(); 
-        //task["Args"].set(this->vm_.create_table_with(args ...));// --
-        if (type == SubmitType::Ani) {
-            this->vm_["Rscript"]["AddRenderTask"].call(index, args ...);
-        }
+        this->vm_["Rscript"]["AddRenderTask"].call(index, args ...);
         this->task_modified_ = true;
         return this;
     }
@@ -204,7 +216,7 @@ public:
     iCache *refresh(ThreadId id, std::string &&newlog) noexcept
     {
         std::lock_guard guard{this->lock_};
-        this->vm_["LogCache"][id] = newlog;
+        this->vm_["Rscript"]["AddRenderLog"].call(id, newlog);
         this->log_modified_ = true;
     }
 };
@@ -214,7 +226,7 @@ class iSketcher : public iRenderAssembly
 protected:
     std::atomic_bool log_;  // log flag
     std::atomic_bool draw_; // draw flag
-    iSketcher() : iRenderAssembly(), log_(false), draw_(true) {}
+    iSketcher() : iRenderAssembly(), log_(true), draw_(true) {}
 
 public:
     iSketcher *display_log() noexcept
@@ -275,25 +287,18 @@ public:
     }
 
     // upload new log
-    virtual iSketcher *upload(iCache *cache) noexcept
+    virtual iSketcher *upload(sol::table logs) noexcept
     {
-        auto opt = cache->provide(ProvideType::Log);
-        if (opt.has_value())
-            this->vm_["Rscript"]["UploadLog"].call(opt.value());
+        this->vm_["Rscript"]["UploadLog"].call(logs);
+        logs.clear();
         return this;
     }
 
     // update new render task
-    virtual iSketcher *update(iCache *cache) noexcept
+    virtual iSketcher *update(sol::table tasks) noexcept
     {
-        //auto opt = cache->provide(ProvideType::Task);
-        //if (opt.has_value())
-        //    this->vm_["Rscript"]["UpdateTask"].call(opt.value());
-        //std::cout << std::format("sketcher::update called, result:{}", opt.has_value() ? "some" : "none") << std::endl;
-        
-        sol::table queue = cache->luavm()->operator[]("TaskQue");
-        this->vm_["Rscript"]["UpdateTask"].call(queue);
-        queue.clear();
+        this->vm_["Rscript"]["UpdateTask"].call(tasks);
+        tasks.clear();
         return this;
     }
 };

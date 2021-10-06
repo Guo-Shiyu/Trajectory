@@ -28,6 +28,7 @@ class Client :  public iLua,
     iRender*    render() const noexcept { return this->render_; }
     iNetIO*     netio() const noexcept { return this->net_; }
     iUserIO*    uio() const noexcept { return this->uio_; }
+    iNetIO*     nio() const noexcept { return this->net_; }
 
     // load and dispatch JSON settings to derived-class
     static void prepare_for_light();
@@ -43,10 +44,6 @@ class Client :  public iLua,
 
     // condig interface
     Client* ensure() noexcept override final;
-
-    // message interface
-    //void    response(const ThreadId sender, ProcIndex i, std::optional<ArgsPack> args) noexcept override final;
-    //void    notify(const ThreadId sender, ProcIndex i, std::optional<ArgsPack> args) noexcept override final;
 
     // work thread interface
     Client* start() noexcept;

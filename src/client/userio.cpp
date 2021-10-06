@@ -5,7 +5,7 @@ SINGLETON_IMPL(UserIO)
 UserIO *UserIO::lazy_init() noexcept
 {
     this->state_ = new SelfState(this);
-    this->state_->set_current(state::uio::Both::instance()); // set input filiter in Client::Prepare::on()
+    this->state_->set_current(state::uio::Both::instance());
     return this;
 }
 

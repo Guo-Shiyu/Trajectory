@@ -69,9 +69,9 @@ Client *Client::start() noexcept
 
 Client *Client::panic() noexcept
 {
-    this->render()->panic();
-    // this->uio()->panic();
-    // this->nio()->panic();
+    this->uio()->panic();
+    this->nio()->panic();
+    this->render()->panic();    // stop renderer at last
 
     Logger::log_dump();
     return this;
