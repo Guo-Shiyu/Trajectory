@@ -39,6 +39,7 @@
     <ClInclude Include="..\header\client\ithreads.h" />
     <ClInclude Include="..\header\client\netio.h" />
     <ClInclude Include="..\header\client\render.h" />
+    <ClInclude Include="..\header\client\sketcher.h" />
     <ClInclude Include="..\header\client\states.h" />
     <ClInclude Include="..\header\client\userio.h" />
     <ClInclude Include="..\header\fsmdef.h" />

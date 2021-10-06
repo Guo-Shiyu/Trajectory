@@ -103,7 +103,7 @@ public:
     iCache *initvm() noexcept
     {
         this->open_libraries();
-        this->vm_.create_named_table("TaskCache");
+        this->vm_.create_named_table("TaskQue");
         this->vm_.create_named_table("LogCache");
         this->vm_.create_named_table("SubmitType",
                                      "Ani", SubmitType::Ani,
@@ -128,16 +128,14 @@ public:
         if (flag)
             if (this->log_modified_)
             {
-                std::lock_guard guard{this->lock_};
                 ret = this->vm_["LogCache"].get<decltype(ret)>();
                 this->vm_["LogCache"].set(sol::nil);
                 this->log_modified_ = false;
             }
             else if (this->task_modified_)
             {
-                std::lock_guard guard{this->lock_};
-                ret = this->vm_["TaskCache"].get<decltype(ret)>();
-                this->vm_["TaskCache"].set(sol::nil);
+                ret = this->vm_["TaskQue"].get<sol::table>();
+                this->vm_["TaskQue"].set(sol::nil);
                 this->task_modified_ = false;
             }
 
@@ -185,18 +183,23 @@ public:
         return this;
     }
 
-    //template <typename... Args> // submit task to task cache
-    //iCache *submit(SubmitType type, std::string_view index, Args... args) noexcept
-    //{
-    //    std::lock_guard guard{this->lock_};
-    //    sol::table &tab = this->vm_["TaskCache"].get<sol::table>();
-    //    tab[tab.size() + 1] = this->vm_.create_table();
-    //    task["Type"] = static_cast<size_t>(type);
-    //    task["Index"] = index;
-    //    task["Args"] = this->vm_.create_table_with(args ...);
-    //    this->task_modified_ = true;
-    //    return this;
-    //}
+    template <typename... Args> // submit task to task cache
+    iCache *submit(SubmitType type, std::string_view index, Args... args) noexcept
+    {
+        std::lock_guard guard{this->lock_};
+        //sol::table tab = this->vm_["TaskCache"].get<sol::table>();
+        //tab[tab.size() + 1] = this->vm_.create_table();
+        //sol::table task = tab[tab.size()];
+        //task["Type"] = static_cast<size_t>(type);
+        //task["Index"] = index;
+        //task["Args"] = this->vm_.create_table(); 
+        //task["Args"].set(this->vm_.create_table_with(args ...));// --
+        if (type == SubmitType::Ani) {
+            this->vm_["Rscript"]["AddRenderTask"].call(index, args ...);
+        }
+        this->task_modified_ = true;
+        return this;
+    }
 
     iCache *refresh(ThreadId id, std::string &&newlog) noexcept
     {
@@ -283,9 +286,14 @@ public:
     // update new render task
     virtual iSketcher *update(iCache *cache) noexcept
     {
-        auto opt = cache->provide(ProvideType::Task);
-        if (opt.has_value())
-            this->vm_["Rscript"]["UpdateTask"].call(opt.value());
+        //auto opt = cache->provide(ProvideType::Task);
+        //if (opt.has_value())
+        //    this->vm_["Rscript"]["UpdateTask"].call(opt.value());
+        //std::cout << std::format("sketcher::update called, result:{}", opt.has_value() ? "some" : "none") << std::endl;
+        
+        sol::table queue = cache->luavm()->operator[]("TaskQue");
+        this->vm_["Rscript"]["UpdateTask"].call(queue);
+        queue.clear();
         return this;
     }
 };

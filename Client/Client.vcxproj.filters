@@ -83,5 +83,8 @@
     <ClInclude Include="..\header\client\render.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="..\header\client\sketcher.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

@@ -3,8 +3,10 @@
 local module = {
     AddRenderTask = function (index, ...)
         local task = coroutine.create(Ani[index])
-        coroutine.resume(task, ...)
+        local result, why = coroutine.resume(task, ...)
         table.insert(TaskQue, task)
+        print(" -index: "..index)
+        print("lua: AddRenderTask Called result: "..tostring(result).." why: "..tostring(why))
     end,
     
     StepRender = function ()
@@ -61,8 +63,14 @@ local module = {
         print("lua: UploadTask called")
     end,
 
-    UpdateTask = function ()
+    UpdateTask = function (queue)
+        for k, v in ipairs(queue) do 
+            print("Key: "..tostring(k).." Value: "..type(v));
+            table.insert(TaskQue, v)
+            --table.remove(queue, k) -- clear taskque in cache by cpp
+        end
         print("lua: UpdateTask called")
+        print("Cache's TaskQue len: "..#queue)
     end
 }
 
