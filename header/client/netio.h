@@ -7,9 +7,10 @@
 
 class iNetIO : public WorkThread<StateMachine<iNetIO>, std::nullptr_t>
 {
-    protected:
+protected:
     hv::TcpClient* conn_;
 
+public:
     iNetIO() : WorkThread(), conn_(nullptr) {}
     hv::TcpClient* connect() noexcept 
     {

@@ -72,7 +72,7 @@ Client *Client::panic() noexcept
 {
     this->uio()->panic();
     this->nio()->panic();
-    this->render()->panic();    // stop renderer at last
+    this->render()->panic(); // stop renderer at last
     return this;
 }
 

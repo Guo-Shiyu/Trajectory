@@ -30,17 +30,13 @@ int main()
 }
 
 #else
-int main()
-{
-	auto cur = std::filesystem::current_path();
-	std::cout << cur.string() << std::endl;
-	auto rsrc_path = std::filesystem::path{ cur.parent_path().string().append("\\resource") };
-	std::filesystem::directory_iterator all{ rsrc_path };
-	for (auto& it : all)
-	{
-		std::cout << it.path().string() << " " << it.path().filename().string() << std::endl;
-	}
-	return 0;
-}
+#include "../../header/hv/TcpClient.h"
+using namespace hv;
 
+int main() {
+    int port = 1234;
+
+    while (1) hv_sleep(1);
+    return 0;
+}
 #endif // CASE1

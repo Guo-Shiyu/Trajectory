@@ -15,8 +15,7 @@ void iMsg::notify(const ThreadId target, ProcIndex i, std::optional<ArgsPack> ar
     Dispatcher::instance()->dispatch(target, ThreadId::C, i, args);
 }
 
-
-Dispatcher* Dispatcher::lazy_init() noexcept
+Dispatcher *Dispatcher::lazy_init() noexcept
 {
     this->map_.try_emplace(ThreadId::C, Client::i_say_there_would_be_light());
     this->map_.try_emplace(ThreadId::N, NetIO::instance());
@@ -35,10 +34,11 @@ void Dispatcher::dispatch(const ThreadId target, const ThreadId sender, ProcInde
     this->map_.at(target)->response(sender, index, args);
 }
 
-Dispatcher* Dispatcher::instance() noexcept 
+Dispatcher *Dispatcher::instance() noexcept
 {
-    static Dispatcher dis {};
-    static std::once_flag flag {};
-    std::call_once(flag, [&](){ dis.lazy_init(); });
+    static Dispatcher dis{};
+    static std::once_flag flag{};
+    std::call_once(flag, [&]()
+                   { dis.lazy_init(); });
     return &dis;
 }

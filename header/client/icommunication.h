@@ -98,9 +98,9 @@ public:
 
     // create a new param package
     template <typename... Args>
-    static std::shared_ptr<ParamPackage> create(Args... args) noexcept
+    static std::shared_ptr<ParamPackage> create(Args&&... args) noexcept
     {
-        return std::make_shared<ParamPackage>(std::initializer_list<Arg>{args...});
+        return std::make_shared<ParamPackage>(std::initializer_list<Arg>{std::forward<Args&&>(args) ...});
     }
 
 private:

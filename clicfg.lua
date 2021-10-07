@@ -5,7 +5,7 @@ local module =
     Client = {
         ResourcePath = "D:\\GitBranch\\GitHub\\Trajectory\\resource",
     },
-
+    
     Render = 
     {
         MainScreen = 
@@ -14,18 +14,18 @@ local module =
             Width = 1500,
             Fps   = 100,
         },
-
+        
         StartWithLog = true,
     },
-
+    
     NetIO = 
     {
-        SelfPort  = 24680,
-        TargetHost  = "172.0.0.1", 
-        Init = 
+        LoginServerAddr = "172.81.247.7", 
+        TargetPort  = 24680,
+        
+        Protocal = 
         {
-            NetCheckSite = "www.baidu.com",
-            MaxDisConnectTime = 1000,
+            Beat = [[{"Type":"Beat"}]],
         }
     },
 

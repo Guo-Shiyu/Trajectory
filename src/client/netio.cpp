@@ -17,9 +17,7 @@ NetIO *NetIO::ensure() noexcept
 NetIO *NetIO::start() noexcept
 {
     this->state_->into(state::net::ToLoginServ::instance());
-
-
-
+    this->state_->execute();
     return this;
 }
 NetIO *NetIO::panic() noexcept

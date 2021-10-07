@@ -1,6 +1,6 @@
 #include "../../header/client/sketcher.h"
 
-Sketcher *Sketcher::initvm() noexcept 
+Sketcher *Sketcher::initvm() noexcept
 {
     this->open_libraries();
     this->vm_.create_named_table("LogTable");
@@ -8,15 +8,14 @@ Sketcher *Sketcher::initvm() noexcept
     return this;
 }
 
-Sketcher* Sketcher::ensure() noexcept
+Sketcher *Sketcher::ensure() noexcept
 {
     this->luavm()->operator[]("SketcherEnsure").call();
     return this;
 }
 
-Cache* Cache::ensure() noexcept 
+Cache *Cache::ensure() noexcept
 {
     this->luavm()->operator[]("CacheEnsure").call();
     return this;
 }
-

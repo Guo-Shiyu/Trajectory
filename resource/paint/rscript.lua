@@ -83,7 +83,7 @@ local module = {
 
     AddRenderLog = function (id, logstr)
         LogCache[id] = logstr
-        print("lua: AddRenderLog called")
+        print("lua: AddRenderLog called, new log:"..logstr)
     end
 }
 

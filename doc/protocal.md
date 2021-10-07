@@ -8,7 +8,7 @@
 {
     "Uid"   :   123456,     // int_hash, created by login server
     "Name"  :   "xxxxx",    // str, input by user
-    "Player"    :           // json decided by user 
+    "Player"    :           // json, decided by user 
     {
         "Weapon"    :   1,  // int enum
         "Style"     :       // json
@@ -176,8 +176,14 @@
  null                       // null
  ~~~  
 
- 特别的, 在以下情况, 由客户端发起一次主动心跳, 此时 仅包含 "Type" 字段, 且其值为 "beat" , 当 login server 收到这样的消息时 充当 echo 服务器返回原文, 客户端收到返回重置心跳计时器.  
- 当 login server 60s 未收到客户端的任何消息时, 将视为其断线
- - 客户端第一次上线时
+ 特别的, 在以下情况, 由客户端发起一次主动心跳, 此时 仅包含 "Type" 字段, 且其值为 "Beat" , 当 login server 收到这样的消息时， 返回一个如下json， 字段uid表示为客户端的uid, 客户端收到返回重置心跳计时器.  
+ - 客户端第一次上线时 "hello"
  - 当超过 15s 未互通消息时
+
+ ~~~ JSON
+ {
+     "Uid" : 12345
+ }
+ ~~~
  
+ 当 login server 60s 未收到客户端的任何消息时, 视为其断线
