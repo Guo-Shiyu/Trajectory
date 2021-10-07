@@ -6,6 +6,7 @@
 std::queue<std::string> Logger::cache_{};
 sol::state iConfig::configer_{};
 std::unordered_map<ThreadId, iMsg *> Dispatcher::map_{};
+std::vector<ProcIndex> CallMapBuilder::index_cache_{};
 
 void Client::prepare_for_light()
 {
@@ -72,8 +73,6 @@ Client *Client::panic() noexcept
     this->uio()->panic();
     this->nio()->panic();
     this->render()->panic();    // stop renderer at last
-
-    Logger::log_dump();
     return this;
 }
 

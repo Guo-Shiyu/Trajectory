@@ -41,7 +41,7 @@ local module = {
 
         Set.SetTextStyle(LogArgs.Hight, LogArgs.Width, LogArgs.Font)
         Act.Xyout(0,        0,                      "Cli:"..LogArgs.GetLog(ThreadId.C))
-        Act.Xyout(1440,     0,                      "Key:"..LogArgs.GetLog(ThreadId.U))
+        Act.Xyout(1400,     0,                      "Key:"..LogArgs.GetLog(ThreadId.U))
         Act.Xyout(0,        900 - LogArgs.Hight,    "Net:"..LogArgs.GetLog(ThreadId.N))
     end,
 
@@ -59,7 +59,7 @@ local module = {
                 LogTable[v] = logs[v]
             end
         end
-        print("lua: UploadTask called")
+        print("lua: UploadLog called")
     end,
 
     UpdateTask = function (queue)

@@ -7,18 +7,45 @@
 
 #include <graphics.h>
 
-using InputFiliter = std::function<bool(ExMessage &)>;
+using InputFiliter = std::function<bool(const ExMessage &)>;
+using InputReactor = std::function<void(ExMessage&)>;
 
 class iUserIO : public WorkThread<StateMachine<iUserIO>, hv::EventLoopThread>
 {
     InputFiliter filiter_;
+    InputReactor reactor_;
 
 public:
     iUserIO() = default;
-    virtual iUserIO *set_filiter(const InputFiliter &f)
+    //virtual iUserIO *set_filiter(InputFiliter &&f)  // std::bind(lambda, _1, _2, ...);
+    //{
+    //    this->eloop_->loop()->pause();
+    //    this->eloop_->loop()->resume();
+    //    return this;
+    //}
+
+    //virtual iUserIO* set_reactor(InputReactor &&r)
+    //{
+    //    return this;
+    //}
+
+    virtual iUserIO* reset_all_with(InputFiliter&& filiter, InputReactor&& reactor) noexcept
     {
-        this->filiter_ = f;
+        this->eloop_->loop()->pause();
+        this->filiter_ = filiter;
+        this->reactor_ = reactor;
+        this->eloop_->loop()->resume();
         return this;
+    }
+
+    const InputFiliter& kfiliter() const noexcept
+    {
+        return this->filiter_;
+    }
+
+    const InputReactor& kreactor() const noexcept
+    {
+        return this->reactor_;
     }
 };
 

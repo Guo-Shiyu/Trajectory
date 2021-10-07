@@ -19,6 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\src\client\assist.cpp" />
     <ClCompile Include="..\src\client\character.cpp" />
     <ClCompile Include="..\src\client\client.cpp" />
     <ClCompile Include="..\src\client\dispatcher.cpp" />
@@ -31,6 +32,7 @@
     <ClCompile Include="..\src\client\userio.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\header\client\assist.h" />
     <ClInclude Include="..\header\client\client.h" />
     <ClInclude Include="..\header\client\game.h" />
     <ClInclude Include="..\header\client\icommunication.h" />

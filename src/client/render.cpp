@@ -16,6 +16,17 @@ Render *Render::lazy_init() noexcept
     resources.concat("\\paint"); // ../Trajectory/resource
     load_all_mod(this->skter_->luavm(), resources);
     load_all_mod(this->cache_->luavm(), resources);
+
+    // gen call_map here 
+    CallMapBuilder builder{};
+    builder.set_index("InputLog")
+        ->with_proc([this](std::optional<ArgsPack> pack) 
+            {
+                const ExMessage& msg = std::any_cast<ExMessage&>(pack.value()->args_pack().front());
+                this->cacher()->refresh(ThreadId::U, as_str(msg.vkcode));
+            });
+   this->set_proccall_map(builder.build());
+
     return this;
 }
 
@@ -63,9 +74,9 @@ Render *Render::start() noexcept
 
 Render *Render::panic() noexcept
 {
-    this->sktcher()->stop()->clear_object()->clear_task();
 
     this->cacher()->clear();
+    this->sktcher()->stop();//->clear_object()->clear_task();
 
     closegraph();
     return this;

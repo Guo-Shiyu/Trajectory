@@ -41,6 +41,7 @@ namespace Logger
     // print log to console or store log to file
     inline void log_dump(std::fstream *f = nullptr)
     {
+        std::cout << "========================= Log Dump ===========================" << std::endl;
         if (f == nullptr || not f->good())
         {
             while (cache_.size() > 0)

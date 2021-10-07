@@ -42,7 +42,7 @@ namespace state {
 
         void SignIn::on(Client* c)
         {
-            Sleep(6000);
+            Sleep(60000);
             c->state()->into(state::client::Wrong::instance());
         }
 
@@ -107,7 +107,8 @@ namespace state {
 
         void Wrong::on(Client* c)
         {
-
+            clog("progress exit");
+            Logger::log_dump();
         }
 
         void Wrong::off(Client* c)
@@ -187,8 +188,28 @@ namespace state {
 
         void Both::into(iUserIO* u)
         {
-            //u->set_filiter([](){})
+            //u->set_filiter([](ExMessage&& m) -> bool 
+            //    {
+            //        return true;
+            //    });
+            //u->set_reactor([&u]() -> void
+            //    {
+            //        //u->notify
+            //    }
+            //);
+            u->reset_all_with(
+                [](const ExMessage& m) -> bool 
+                { 
+                    return m.message == WM_CHAR;
+                },
+
+                [uio = UserIO::instance()](ExMessage& msg) -> void 
+                {
+                    uio->notify(ThreadId::R, "InputLog", ArgsPackBuilder::create(msg));
+                }
+            );
         }
+
 
         void Both::on(iUserIO* u)
         {

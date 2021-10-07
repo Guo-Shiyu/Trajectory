@@ -1,6 +1,7 @@
 #pragma once
 
 #include "iinit.h"
+#include "assist.h"
 
 #include <vector>
 #include <initializer_list>
@@ -72,10 +73,7 @@ public:
         args_.insert(args_.begin(), params.begin(), params.end());
     }
 
-    ~ParamPackage()
-    {
-        ~this->args_();
-    }
+    ~ParamPackage() = default;
 
     // set args
     ParamPackage *with(Arg &&arg) noexcept
@@ -92,6 +90,12 @@ public:
         return this;
     }
 
+    // get args container
+    Container& args_pack() noexcept
+    {
+        return this->args_;
+    }
+
     // create a new param package
     template <typename... Args>
     static std::shared_ptr<ParamPackage> create(Args... args) noexcept
@@ -103,6 +107,7 @@ private:
     Container args_;
 };
 
+using ArgsPackBuilder = ParamPackage<std::any, std::vector<std::any>>;
 using ArgsPack      = std::shared_ptr<ParamPackage<std::any, std::vector<std::any>>>;
 using ProcIndex     = std::string_view;
 using MsgHandler    = std::function<void(std::optional<ArgsPack>)>;
@@ -120,6 +125,8 @@ public:
     {
         index_cache_.clear();
     }
+
+    ~CallMapBuilder() = default;
 
     CallMapBuilder *append(const ProcIndex &index, const MsgHandler &hand) noexcept
     {
@@ -178,6 +185,7 @@ public:
     iMsg *set_proccall_map(CallMap &&map)
     {
         this->fnmap_ = std::make_unique<CallMap>(std::forward<CallMap>(map));
+        return this;
     }
 
     // on message

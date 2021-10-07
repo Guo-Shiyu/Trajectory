@@ -123,6 +123,7 @@ public:
 
     std::optional<sol::table> animations() noexcept 
     {
+        std::lock_guard guard{ this->lock_ };
         std::optional<sol::table> ret{std::nullopt};
         if (this->task_modified_)
         {
@@ -135,11 +136,12 @@ public:
 
     std::optional<sol::table> logs() noexcept 
     {
+        std::lock_guard guard{ this->lock_ };
         std::optional<sol::table> ret{ std::nullopt };
         if (this->log_modified_) {
             sol::table tab = this->vm_[LOGS_CACHE];
             ret.emplace(std::move(tab));
-            this->task_modified_ = false;
+            this->log_modified_ = false;
         }
         return ret;
     }
@@ -186,6 +188,12 @@ public:
         return this->lock_.try_lock();
     }
 
+    iCache* to_owned() noexcept
+    {
+        this->lock_.lock();
+        return this;
+    }
+
     iCache *release() noexcept
     {
         this->lock_.unlock();
@@ -197,9 +205,11 @@ public:
         std::lock_guard guard{this->lock_};
         sol::table table = this->vm_[TASKS_CACHE];
         table.clear();
+        this->task_modified_ = false;
         
         table = this->vm_[LOGS_CACHE];
         table.clear();
+        this->log_modified_ = false;
 
         return this;
     }
@@ -218,6 +228,7 @@ public:
         std::lock_guard guard{this->lock_};
         this->vm_["Rscript"]["AddRenderLog"].call(id, newlog);
         this->log_modified_ = true;
+        return this;
     }
 };
 
@@ -269,13 +280,13 @@ public:
 
     virtual iSketcher *clear_task() noexcept
     {
-        this->vm_["Rscript"]["ClearTask"].call();
+        assert(this->vm_["Rscript"]["ClearTask"].call().valid());
         return this;
     }
 
     virtual iSketcher *clear_object() noexcept
     {
-        this->vm_["Rscript"]["ClearObject"].call();
+        assert(this->vm_["Rscript"]["ClearObject"].call().valid());
         return this;
     }
 
