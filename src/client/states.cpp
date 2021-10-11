@@ -41,11 +41,17 @@ namespace state
         IMPL_STATE(SignIn)
         void SignIn::into(Client *c)
         {
+            // wait open animation
+            hv_delay(5000);
+            closegraph();
+            c->render()->sktcher()->stop();
+
+            // todo: stop userio, into cmd line state;
         }
 
         void SignIn::on(Client *c)
         {
-            Sleep(10000);
+            Sleep(100000);
             c->state()->into(state::client::Wrong::instance());
         }
 
@@ -102,6 +108,7 @@ namespace state
         {
             clog("progress exit");
             Logger::log_dump();
+            iConfig::config_dump();
         }
 
         void Wrong::off(Client *c)
@@ -148,14 +155,15 @@ namespace state
             std::string addr = config["LoginServerAddr"];
             int port = config["TargetPort"];
             int connfd = cli->createsocket(port, addr.c_str());
+            std::string hello = config["Protocal"]["Hello"];
             assert(connfd >= 0);
 
-            cli->onConnection = [n](const hv::SocketChannelPtr& channel) {
+            cli->onConnection = [n, hello = std::move(hello)](const hv::SocketChannelPtr& channel) {
                 std::string peeraddr = channel->peeraddr();
                 if (channel->isConnected()) 
                 {
                     auto info = std::format("connected to {}, connfd:{}\n", peeraddr.c_str(), channel->fd());
-                    channel->write("hello");
+                    channel->write(hello);
                     clog(info);
                     n->notify(ThreadId::R, "NetLog", ArgsPackBuilder::create(std::move(info)));
                 }
@@ -168,10 +176,16 @@ namespace state
             };
 
             cli->onMessage = [n](const hv::SocketChannelPtr& channel, hv::Buffer* buf) {
-                //printf("< %.*s\n", (int)buf->size(), (char*)buf->data());
                 std::string info{static_cast<char*>(buf->data()), buf->size()};
-                n->notify(ThreadId::R, "NetLog", ArgsPackBuilder::create(std::move(info)));
+                n->notify(ThreadId::R, "NetLog", ArgsPackBuilder::create(info));
+                n->notify(ThreadId::N, "OnMessage", ArgsPackBuilder::create(std::move(info)));
             };
+
+            hv::ReconnectInfo reconn;
+            reconn.min_delay = 1000;
+            reconn.max_delay = 10000;
+            reconn.delay_policy = 2;
+            cli->setReconnect(&reconn);
 
             cli->start(false);
         }

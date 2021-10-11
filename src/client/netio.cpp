@@ -6,6 +6,18 @@ NetIO *NetIO::lazy_init() noexcept
     this->state_ = new SelfState(this);
     this->state_->set_current(state::net::ToLoginServ::instance());
     this->conn_ = new hv::TcpClient();
+
+    CallMapBuilder builder{};
+    builder.set_index("OnMessage")
+        ->with_proc([this](std::optional<ArgsPack> pack)
+            {
+                json msg = json::parse(std::move(std::any_cast<std::string>(pack.value()->args_pack().front())));
+                configer()["Config"]["Uid"].set(msg["Uid"].get<int>());
+            });
+
+    this->set_proccall_map(builder.build());
+
+
     return this;
 }
 
@@ -24,22 +36,3 @@ NetIO *NetIO::panic() noexcept
 {
     return this;
 }
-
-// NetIO::start() noexcept
-// {
-//     // no heart beat
-//     //int beat_init = NetIO::setting_["BeatCountInit"];
-//     //std::atomic_int* beat = new std::atomic_int(beat_init);
-//     //this->conn_->loop()->setInterval(1000,
-//     //    [&beat, &channal = this->conn_->channel](hv::TimerID timerid) {
-//     //        beat->fetch_sub(1);
-//     //        if (*beat == 0) {
-//     //
-//     //            channal->send(NetIO::setting_["BaseBeat"].dump());
-//     //        }
-
-//     //});
-
-//     // reset client.conn_.onMessage, onConnect, onWriteCompelete
-
-// }

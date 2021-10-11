@@ -47,6 +47,9 @@
     <ClInclude Include="..\header\fsmdef.h" />
     <ClInclude Include="..\header\log.h" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="..\clicfg.lua" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>

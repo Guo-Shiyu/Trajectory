@@ -5,12 +5,14 @@
  - [json](https://github.com/nlohmann/json) : JSON for modern C++
  - [libhv](https://github.com/ithewei/libhv) : event-loop with non-blocking IO and timer 
  - [sol2](https://github.com/ThePhD/sol2) : C++ binding for Lua
- # 进度记录(~~交作业用~~)
+ 
+ # 进度记录  
+ 交作业用  
  20-08-30:   
  + 立项
 
  20-09-01:   
- + 开发环境配置完成, libhv, lua, sol可以正常使用  
+ + 开发环境配置完成, 外部依赖可以正常使用  
  
  20-09-09:   
  + 类结构基本搭建完成 
@@ -38,13 +40,16 @@
  + 草案，战斗服务器物理引擎
 
  20-10-07
- + 重构，渲染线程即时日志现在是基于线程间通信接口完成的。 接口更加简洁清晰了
+ + 重构，渲染线程即时日志现在是基于线程间通信接口完成的, 接口更加简洁清晰了
  + 完善，渲染线程工作逻辑，现在涉及 data race 的代码都被封装在了类内部，解决了渲染线程对 lua 虚拟机争用频繁加锁的问题（虽然不影响绘图性能）
  + 完善，渲染线程 userio，netio 即时日志部分
  + 完善，状态机的逻辑
  + 调整，配置文件的内容
  + 调整，部分 userio 线程的逻辑
- + 草案，战斗服务器架构
+ + 草案，登录服务器架构
+
+ 20-10-09  
+ + 测试， 客户端与服务端通信
 
  # 目录结构
  ~~~
@@ -97,10 +102,9 @@
  服务器与客户端间的通信格式均为 `JSON`  
  各个字段定义参见 `PROTO.md`
 
- # 实现思路  
- 参见 `inspiration.md`
+ 
 
- # 客户端服务端公用部分  
+ ## 客户端服务端公用部分  
  包括 状态机 (state.h) 日志 (log.h) 两部分  
  定义在 `header` 目录下对应的 .h 文件中  
  
@@ -153,7 +157,7 @@
 
  # 客户端
  客户端需要三个线程
- - 绘制线程 R (Render)
+ - 绘制线程 R (Renderer)
  - 操作线程 U (UserIO)
  - 通信线程 N (NetIO)
 
@@ -165,15 +169,13 @@
   动作由 C++ 通过 sol 注册到 Lua 中名为 Act 的全局表中, 均为 EasyX 的基本绘制函数, 如 `circle`, `rectangle` 等   
   详见 threads.cpp/Render/regist_act   
   
-  - Task
-  任务在 Lua 脚本层定义, 用于绘制动画/特效效果. Task 是一个用于协程的函数. 一个任务中包含任务触发的坐标, 持续时长, 以及多个用于绘制图像的 Act.  
-  
-  Task 在 C++ 通过 Render::submit_task 接口调用, 根据参数将不同 Kind 的绘制任务添加到名为 TaskQue 的全局表中, 作为 Lua 的绘制任务队列. Lua 层每一帧依次执行任务队列中的任务并将 status 为 dead 的协程对象剔除任务队列. 
-  
+  - Task  
+  任务在 Lua 脚本层定义, 用于绘制动画/特效效果. Task 是一个协程函数. 一个任务中包含任务触发的坐标, 持续时长, 以及多个用于绘制图像的 Act.  
+  Task 在 C++ 通过 Render::submit 接口调用, 根据参数将不同 Kind 的绘制任务添加到名为 TaskQue 的全局表中, 作为 Lua 的绘制任务队列. Lua 层每一帧依次执行任务队列中的任务并将 status 为 dead 的协程对象剔除任务队列. 
   其他线程可以通过 MsgDispatch 来调用 Render::on_msg 接口, 实现跨线程注册绘制任务, 用于实现事件驱动效果.  
   Task 定义详见 resource/Paint/corender.lua
 
-  - Paintobj
+  - Paintobj  
   对象在 Lua 脚本层定义, 是固定显示在界面上的元素, 如力度条/角度指示器等. 由于其相对固定, 因此不通过绘制任务注册, 单独维护在 Lua 名为 PaintAble 的全局表中.
 
   特别的, 由于地图作为背景固定且占用内存较大, 对查询修改性能要求较高, 因此在 C++ 层面的 GameInfo 中维护并作绘制. 

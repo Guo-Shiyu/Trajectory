@@ -55,12 +55,14 @@
 
 ## client <-> login server
  正常情况下二者间通信， 包含三个字段  
-- Type  : string        "request" | "order" | "reply" | "return"  
+- Type  : string        "request" | "order" | "reply" | "return" | "hello"  | "hiha"   
  该字段标记了消息的主类型, 其中 
  + + request    泛指请求数据
  + + order      泛指有效操作
  + + reply      用于回复 request
  + + return     用于回复 order
+ + + hello      第一次登录上线时请求id
+ + + hiha       结束对局后重新连接登陆服务器
 
 - SubType   :   int (enum) 
  该字段标记主类型下消息子类型, 均为从 1 开始的枚举值, 各种情况下意义为:

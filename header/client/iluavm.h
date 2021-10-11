@@ -49,6 +49,11 @@ public:
         return iConfig::configer_;
     }
 
+    static void config_dump() noexcept
+    {
+        configer_["Config"]["ConfigDump"].call();
+    }
+
     virtual ~iConfig(){};
 };
 

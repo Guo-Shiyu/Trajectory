@@ -13,6 +13,10 @@ void Client::prepare_for_light()
     // get runtime dir
     auto cur = std::filesystem::current_path();
 
+    auto now = datetime_now();
+    clog("main start at: [{:2}:{:2}:{:2}], runtime directory:{}",
+        now.hour, now.min, now.sec, cur.string());
+
     // load config file to setting
     auto project = cur.parent_path();
     Client::configer().require_file("Config", project.concat("\\clicfg.lua").string());
@@ -72,7 +76,9 @@ Client *Client::panic() noexcept
 {
     this->uio()->panic();
     this->nio()->panic();
-    this->render()->panic(); // stop renderer at last
+    
+    // stop renderer at last
+    this->render()->panic(); 
     return this;
 }
 
@@ -80,7 +86,6 @@ Client *Client::i_say_there_would_be_light()
 {
     static Client cli{};
     static std::once_flag oc{};
-    std::call_once(oc, [&]()
-                   { cli.lazy_init(); });
+    std::call_once(oc, [&](){ cli.lazy_init(); });
     return &cli;
 }
