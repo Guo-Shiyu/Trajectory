@@ -24,7 +24,7 @@ local module = {
         local LogArgs = {
             Hight   = 16,
             Width   = 9,
-            Font    = "Termianl",
+            Font    = "courier",
             GetLog  = function (id)
                 if id == ThreadId.U then
                     local info = LogTable[id] or ""

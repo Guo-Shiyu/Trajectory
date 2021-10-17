@@ -270,9 +270,12 @@ public:
         {
             cleardevice();
             BeginBatchDraw();
-            this->vm_["Rscript"]["StepRender"].call();
+
+            // draw log at first 
             if (this->log_)
                 this->vm_["Rscript"]["ShowLog"].call();
+            
+            this->vm_["Rscript"]["StepRender"].call();
             EndBatchDraw();
         }
         return this;

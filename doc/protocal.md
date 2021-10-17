@@ -188,4 +188,19 @@
  }
  ~~~
  
- 当 login server 60s 未收到客户端的任何消息时, 视为其断线
+ 当 login server 60s 未收到客户端的任何消息时, 视为其断线 
+
+ ### 例子：
+ 
+ 
+ ~~~ JSON    
+ // 请求房间数据
+ {
+     "Type" : "request",
+     "SubType"  : 1,
+     "Appendix" :
+     {
+         "ReqCounter"    :   0
+     }
+ }
+ ~~~

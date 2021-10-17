@@ -30,7 +30,7 @@ Render* Render::lazy_init() noexcept
 		->with_proc([this](std::optional<ArgsPack> pack)
 					{
 						this->cacher()->refresh(ThreadId::N, std::any_cast<std::string>(pack.value()->args_pack().front()));
-					});
+					}) ;
 	
 	this->set_proccall_map(builder.build());
 
@@ -47,7 +47,7 @@ Render* Render::ensure() noexcept
 
 Render* Render::start() noexcept
 {
-	this->cacher()->submit("OpenAnimation", 600, 600, sol::nil, sol::nil, 600, sol::nil);
+	this->cacher()->submit("OpenAnimation");
 	this->eloop_ = new std::thread(
 		[this]()
 		{

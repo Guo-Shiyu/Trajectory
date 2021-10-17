@@ -7,6 +7,7 @@ std::queue<std::string> Logger::cache_{};
 sol::state iConfig::configer_{};
 std::unordered_map<ThreadId, iMsg *> Dispatcher::map_{};
 std::vector<ProcIndex> CallMapBuilder::index_cache_{};
+json Protocal::allprotocal_{};
 
 void Client::prepare_for_light()
 {
@@ -24,7 +25,7 @@ void Client::prepare_for_light()
 
     // load resource file
     load_all_mod(&Client::configer(), project.concat("\\resource\\script"));
-}
+} 
 
 void Client::shine() noexcept
 {
@@ -37,6 +38,7 @@ void Client::shine() noexcept
     catch (const std::exception &e)
     {
         clog("catch std::exception:{}", e.what());
+        this->state_->into(state::client::Wrong::instance());
     }
 
     // program goes wrong, execute wrong state
@@ -53,6 +55,8 @@ Client *Client::lazy_init() noexcept
     this->net_->lazy_init();
     this->uio_ = UserIO::instance();
     this->uio_->lazy_init();
+    this->vm_.open_libraries(sol::lib::base, sol::lib::string, sol::lib::package, sol::lib::table, sol::lib::io);
+    load_all_mod(&this->vm_, std::filesystem::path{configer()["Config"]["Client"]["ResourcePath"].get<std::string>()}.concat("\\script"));
     return this;
 }
 

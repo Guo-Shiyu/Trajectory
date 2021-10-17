@@ -41,17 +41,15 @@ namespace state
         IMPL_STATE(SignIn)
         void SignIn::into(Client *c)
         {
-            // wait open animation
-            hv_delay(5000);
-            closegraph();
-            c->render()->sktcher()->stop();
-
-            // todo: stop userio, into cmd line state;
+            // show sign in ani 
+            c->render()->cacher()->submit("IntoSignIn");
+            
         }
 
         void SignIn::on(Client *c)
         {
-            Sleep(100000);
+            clog("ϣ������׶ι�����ɣ� �������׶� siroco");
+            Sleep(10000);
             c->state()->into(state::client::Wrong::instance());
         }
 
@@ -178,7 +176,7 @@ namespace state
             cli->onMessage = [n](const hv::SocketChannelPtr& channel, hv::Buffer* buf) {
                 std::string info{static_cast<char*>(buf->data()), buf->size()};
                 n->notify(ThreadId::R, "NetLog", ArgsPackBuilder::create(info));
-                n->notify(ThreadId::N, "OnMessage", ArgsPackBuilder::create(std::move(info)));
+                n->notify(ThreadId::N, "OnHello", ArgsPackBuilder::create(std::move(info)));
             };
 
             hv::ReconnectInfo reconn;
@@ -214,23 +212,20 @@ namespace state
 
     namespace uio
     { 
-        IMPL_STATE(Both)
+        IMPL_STATE(SignIn)
 
-        void Both::into(iUserIO *u)
+        void SignIn::into(iUserIO *u)
         {
-            u->reset_with(
-                [](const ExMessage& m) noexcept -> bool
-                {   return m.message == WM_CHAR;    },
-                std::nullopt,
-                std::nullopt
-            );
+            u->set_mapper([&map = UserIO::SignInMap](const char key) noexcept {
+                if (map.contains(key))  map[key]();
+            });
         }
 
-        void Both::on(iUserIO *u)
+        void SignIn::on(iUserIO *u)
         {
         }
 
-        void Both::off(iUserIO *u)
+        void SignIn::off(iUserIO *u)
         {
         }
 

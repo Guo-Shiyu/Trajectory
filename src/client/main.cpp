@@ -29,6 +29,18 @@ void main()
 #include "../../header/hv/TcpClient.h"
 #include "../../header/hv/htime.h"
 
+ListNode* deleteDuplicates(ListNode* head) {
+    for (ListNode* cur = head; cur->next != nullptr; cur = cur->next)
+    {
+        ListNode* target = cur;
+        while(target->next->val == cur->val)
+        {
+            // search target node 
+
+        }
+    }
+}
+
 using namespace hv;
 
 int main(int argc, char* argv[]) {

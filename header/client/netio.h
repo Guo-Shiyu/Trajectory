@@ -38,3 +38,11 @@ class NetIO : public iNetIO
     NetIO*  start() noexcept override final;
     NetIO*  panic() noexcept override final;
 };
+
+class Protocal
+{
+private:
+    static json& instance() noexcept;
+public:
+    static std::string take(std::string_view index) noexcept;
+};

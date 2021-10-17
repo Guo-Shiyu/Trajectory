@@ -5,7 +5,7 @@ local module =
     Client = {
         ResourcePath = "D:\\GitBranch\\GitHub\\Trajectory\\resource",
         SelfDescriptor = {
-            Uid   =   "nil",
+            --Uid   =   "nil",
             Name  =   "hiahiahia",
             Player    =
             {
@@ -34,7 +34,7 @@ local module =
     
     NetIO = 
     {
-        LoginServerAddr = "172.30.35.108", 
+        LoginServerAddr = "172.23.129.206", 
         TargetPort  = 24680,
         
         
@@ -42,6 +42,7 @@ local module =
         {
             Hello   = [[{"Type":"Hello"}]],
             Beat    = [[{"Type":"Beat"}]],
+            RequestRooms = [[{"Type":"request","SubType":1,"Appendix":{"ReqCounter":0}}]]
         }
     },
 
