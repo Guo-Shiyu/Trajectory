@@ -7,7 +7,7 @@ std::queue<std::string> Logger::cache_{};
 sol::state iConfig::configer_{};
 std::unordered_map<ThreadId, iMsg *> Dispatcher::map_{};
 std::vector<ProcIndex> CallMapBuilder::index_cache_{};
-json Protocal::allprotocal_{};
+size_t Protocol::LoginBuilder::req_num_{ 0 };
 
 void Client::prepare_for_light()
 {

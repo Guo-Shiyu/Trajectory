@@ -5,6 +5,7 @@
 local module = {
     RenderEnsure = function ()
         print("lua: render ensure called")
+        print("Type of Notify is:")
     end,
 
     UioEnsure = function ()

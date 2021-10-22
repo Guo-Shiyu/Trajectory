@@ -43,12 +43,10 @@ namespace state
         {
             // show sign in ani 
             c->render()->cacher()->submit("IntoSignIn");
-            
         }
 
         void SignIn::on(Client *c)
         {
-            clog("ϣ������׶ι�����ɣ� �������׶� siroco");
             Sleep(10000);
             c->state()->into(state::client::Wrong::instance());
         }
@@ -153,15 +151,16 @@ namespace state
             std::string addr = config["LoginServerAddr"];
             int port = config["TargetPort"];
             int connfd = cli->createsocket(port, addr.c_str());
-            std::string hello = config["Protocal"]["Hello"];
+            // std::string hello = config["Protocal"]["Hello"];
             assert(connfd >= 0);
 
-            cli->onConnection = [n, hello = std::move(hello)](const hv::SocketChannelPtr& channel) {
+            cli->onConnection = [n](const hv::SocketChannelPtr& channel) {
                 std::string peeraddr = channel->peeraddr();
                 if (channel->isConnected()) 
                 {
                     auto info = std::format("connected to {}, connfd:{}\n", peeraddr.c_str(), channel->fd());
-                    channel->write(hello);
+                    /*Protocol::(ToWhere::Login, ProtoType::Hello, OrdSubType::Create)*/
+                    channel->write(Protocol::LoginBuilder::make().deal_type(ProtoType::Hello).build());
                     clog(info);
                     n->notify(ThreadId::R, "NetLog", ArgsPackBuilder::create(std::move(info)));
                 }

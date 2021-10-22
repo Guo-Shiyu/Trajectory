@@ -11,3 +11,6 @@ Client/x64/*
 x64/*
 *.log
 *.log
+*.idb
+*.pdb
+*.lastbuildstate

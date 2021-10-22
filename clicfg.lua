@@ -40,9 +40,7 @@ local module =
         
         Protocal = 
         {
-            Hello   = [[{"Type":"Hello"}]],
-            Beat    = [[{"Type":"Beat"}]],
-            RequestRooms = [[{"Type":"request","SubType":1,"Appendix":{"ReqCounter":0}}]]
+            ToLoginServer = [[{"Type":"request","SubType":1,"ReqCounter":0,"Appendix":{}}]]
         }
     },
 

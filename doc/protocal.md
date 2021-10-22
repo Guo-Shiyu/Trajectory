@@ -55,17 +55,19 @@
 
 ## client <-> login server
  正常情况下二者间通信， 包含三个字段  
-- Type  : string        "request" | "order" | "reply" | "return" | "hello"  | "hiha"   
+- Type  : string        "request" | "order" | "reply" | "return" | "hello"  
  该字段标记了消息的主类型, 其中 
  + + request    泛指请求数据
  + + order      泛指有效操作
  + + reply      用于回复 request
  + + return     用于回复 order
  + + hello      第一次登录上线时请求id
- + + hiha       结束对局后重新连接登陆服务器
 
 - SubType   :   int (enum) 
  该字段标记主类型下消息子类型, 均为从 1 开始的枚举值, 各种情况下意义为:
+
+ + + hello  没有subtype字段, 或其值无意义
+
  + + request
  + + + 1    请求大厅中所有房间数据
  + + + 2    请求所有武器数据
@@ -86,6 +88,9 @@
 
 - Appendix  : json  
  该字段是一个 json , 包含每次通信的参数, json 的格式由 前两个字段决定  
+
+ + + hello  
+
  + + request
  + + + 1    请求大厅中所有房间数据
  ~~~ JSON

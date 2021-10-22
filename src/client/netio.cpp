@@ -10,27 +10,25 @@ NetIO *NetIO::lazy_init() noexcept
     CallMapBuilder builder{};
     builder.set_index("OnHello")
         ->with_proc([this](std::optional<ArgsPack> pack)
-            {
-                json msg = json::parse(std::move(std::any_cast<std::string>(pack.value()->args_pack().front())));
-                configer()["Config"]["Uid"].set(msg["Uid"].get<int>());
-            })
-        ->set_index("RequestRooms")
-                ->with_proc([this](std::optional<ArgsPack> pack)
                     {
-                        this->connect()->onMessage = [this](const hv::SocketChannelPtr& channel, hv::Buffer* buf) {
-                            std::string info{ static_cast<char*>(buf->data()), buf->size() };
+                        json msg = json::parse(std::move(std::any_cast<std::string>(pack.value()->args_pack().front())));
+                        configer()["Config"]["Uid"].set(msg["Uid"].get<int>());
+                    })
+        ->set_index("RequestRooms")
+        ->with_proc([this](std::optional<ArgsPack> pack)
+                    {
+                        this->connect()->onMessage = [this](const hv::SocketChannelPtr &channel, hv::Buffer *buf)
+                        {
+                            std::string info{static_cast<char *>(buf->data()), buf->size()};
                             this->notify(ThreadId::R, "NetLog", ArgsPackBuilder::create(info));
                         };
-                        //const auto& config = configer()["Config"]["NetIO"];
-                        //json req = json::parse(config["Protocal"]["RequestRooms"].get<std::string>());
-                        //req["Appendix"]["ReqCounter"] = req["Appendix"]["ReqCounter"].get<int>() + 1;
-                        this->connect()->channel->write(req.dump());
-                        // jiang xie yi chongxiang cheng dandu de ming ming kong jian 
+                        this->connect()->channel->write(Protocol::LoginBuilder::make()
+                                                                                .deal_type(ProtoType::Request)
+                                                                                .deal_subtype(ReqSubType::Room)
+                                                                                .build());
                     });
 
-
     this->set_proccall_map(builder.build());
-
 
     return this;
 }
@@ -51,31 +49,28 @@ NetIO *NetIO::panic() noexcept
     return this;
 }
 
-json& Protocal::instance() noexcept
-{
-    static json j;
-    static std::once_flag flag{};
-    std::call_once(flag, [&js = j]() 
-        {
-            const auto& config = iConfig::configer()["Config"]["NetIO"]["Protocal"];
-            auto load_protoccal = [&](auto idx) {    js[idx] = json::parse(config[idx].get<std::string>()); };
-            load_protoccal("RequestRooms");
-            load_protoccal("Hello");
-            load_protoccal("Beat");
-            //load_protoccal("RequestRooms");
-        });
-    return j;
-}
-
-std::string Protocal::take(std::string_view idx) noexcept
-{
-    static std::unordered_map<std::string_view, size_t> counter;
-    if (counter.contains(idx))
-        counter[idx]++;
-    else
-        counter[idx] = 1;
-    
-    if (idx == "RequestRooms")
-
-}
-
+//// todo: there may divide into two json
+//json& Protocol::instance() noexcept
+//{
+//    static json proto;
+//    static std::once_flag flag{};
+//    std::call_once(flag, [&]()
+//        {
+//            json login, battle;
+//            try
+//            {
+//                const auto& config = iConfig::configer()["Config"]["NetIO"]["Protocol"];
+//                login = json::parse(config["ToLoginServer"].get<std::string>());
+//                // battle = json::parse(config["ToBattleServer"].get<std::string>());
+//            }
+//            catch(const std::exception& e)
+//            {
+//                clog("protocal load failed: {}", e.what());
+//                std::terminate();
+//            }
+//            proto["Login"] = login;
+//            proto["Battle"] = battle;
+//        });
+//
+//    return proto;
+//}

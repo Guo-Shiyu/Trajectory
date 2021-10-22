@@ -39,8 +39,7 @@ Render* Render::lazy_init() noexcept
 
 Render* Render::ensure() noexcept
 {
-	auto result = this->configer()["Ensure"]["RenderEnsure"].call();
-	assert(result.valid());
+	this->configer()["Ensure"]["RenderEnsure"].call();
 	this->sktcher()->ensure();
 	return this;
 }

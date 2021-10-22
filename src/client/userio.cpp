@@ -12,7 +12,7 @@ UserIO* UserIO::lazy_init() noexcept
 
 UserIO* UserIO::ensure() noexcept
 {
-	assert(this->configer()["Ensure"]["UioEnsure"].call().valid());
+	this->configer()["Ensure"]["UioEnsure"].call().valid();
 	return this;
 }
 
