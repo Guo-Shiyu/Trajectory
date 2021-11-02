@@ -1,6 +1,6 @@
 
 
-//#define CASE1
+#define CASE1
 
 #ifdef CASE1
 
@@ -15,7 +15,6 @@
 #ifdef CASE1
 using God = Client;
 
-[[nodiscard("hiahia")]]
 int main() 
 {
 	God::prepare_for_light();

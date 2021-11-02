@@ -80,13 +80,13 @@ public:
             switch (auto& ref = this->tobuild_; type)
             {
             case ProtoType::Hello:
-                ref["Type"] = "hello";
+                ref["Type"] = "Hello";
                 break;
             case ProtoType::Request:
-                ref["Type"] = "request";
+                ref["Type"] = "Request";
                 break;
             case ProtoType::Order:
-                ref["Type"] = "order";
+                ref["Type"] = "Order";
                 break;
             
             // unreachable

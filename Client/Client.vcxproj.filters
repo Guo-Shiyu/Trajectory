@@ -97,5 +97,23 @@
     <None Include="..\clicfg.lua">
       <Filter>资源文件</Filter>
     </None>
+    <None Include="..\resource\paint\ani.lua">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="..\resource\paint\cache.lua">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="..\resource\paint\check.lua">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="..\resource\paint\color.lua">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="..\resource\paint\object.lua">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="..\resource\paint\rscript.lua">
+      <Filter>资源文件</Filter>
+    </None>
   </ItemGroup>
 </Project>

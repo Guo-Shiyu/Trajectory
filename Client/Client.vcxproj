@@ -49,6 +49,12 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="..\clicfg.lua" />
+    <None Include="..\resource\paint\ani.lua" />
+    <None Include="..\resource\paint\cache.lua" />
+    <None Include="..\resource\paint\check.lua" />
+    <None Include="..\resource\paint\color.lua" />
+    <None Include="..\resource\paint\object.lua" />
+    <None Include="..\resource\paint\rscript.lua" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
