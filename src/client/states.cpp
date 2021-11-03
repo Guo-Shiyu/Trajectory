@@ -41,15 +41,13 @@ namespace state
         IMPL_STATE(SignIn)
         void SignIn::into(Client *c)
         {
-            // wait for open animation
-            Sleep(20 * 1000);
-            // show sign-in ani 
+            // show sign in ani 
             c->render()->cacher()->submit("IntoSignIn");
         }
 
         void SignIn::on(Client *c)
         {
-            
+            Sleep(10000);
             c->state()->into(state::client::Wrong::instance());
         }
 
