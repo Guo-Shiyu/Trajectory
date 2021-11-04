@@ -38,7 +38,3 @@ UserIO* UserIO::panic() noexcept
 	return this;
 }
 
-KeyMap UserIO::SignInMap = {
-	{'h', []() {	Dispatcher::instance()->dispatch(ThreadId::N, ThreadId::U, "RequestRooms", std::nullopt);	}}
-};
-

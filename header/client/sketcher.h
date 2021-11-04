@@ -17,7 +17,8 @@ protected:
     {
         this->vm_.open_libraries(sol::lib::base, sol::lib::coroutine,
                                  sol::lib::math, sol::lib::package,
-                                 sol::lib::table, sol::lib::string);
+                                 sol::lib::table, sol::lib::string,
+                                 sol::lib::os);
         return this;
     }
 
@@ -273,26 +274,29 @@ public:
 
             // draw log at first 
             if (this->log_)
-                this->vm_["Rscript"]["ShowLog"].call();
+                auto placeholder_1 = this->vm_["Rscript"]["ShowLog"].call();
             
-            this->vm_["Rscript"]["StepRender"].call();
+            auto placeholder_2 = this->vm_["Rscript"]["StepRender"].call();
             EndBatchDraw();
         }
         return this;
     }
 
+    // unsafe
     virtual iSketcher *clear_task() noexcept
     {
         assert(this->vm_["Rscript"]["ClearTask"].call().valid());
         return this;
     }
-
+    
+    // unsafe
     virtual iSketcher *clear_object() noexcept
     {
         assert(this->vm_["Rscript"]["ClearObject"].call().valid());
         return this;
     }
 
+    // unsafe
     virtual iSketcher *clear_all() noexcept
     {
         this->clear_object();

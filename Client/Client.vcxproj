@@ -30,6 +30,7 @@
     <ClCompile Include="..\src\client\sketcher.cpp" />
     <ClCompile Include="..\src\client\states.cpp" />
     <ClCompile Include="..\src\client\userio.cpp" />
+    <ClCompile Include="static.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\header\client\assist.h" />

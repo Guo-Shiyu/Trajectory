@@ -7,8 +7,12 @@ Render* Render::lazy_init() noexcept
 	// sketcher and cache has same action
 	this->skter_ = new Sketcher();
 	this->cache_ = new Cache();
-	this->skter_->initvm()->regist_action();
-	this->cache_->initvm()->regist_action();
+	this->skter_->initvm()
+		->regist_action()->luavm()
+		->create_named_table("Schedule", "Submit", [this](std::string_view idx) { this->cacher()->submit(idx); });
+	this->cache_->initvm()
+		->regist_action()->luavm()
+		->create_named_table("Schedule", "Submit", [this](std::string_view idx) { this->cacher()->submit(idx); });
 
 	// bind funtion with lua state and show login cartoon
 	std::string path = this->configer()["Config"]["Client"]["ResourcePath"];
@@ -30,7 +34,19 @@ Render* Render::lazy_init() noexcept
 		->with_proc([this](std::optional<ArgsPack> pack)
 					{
 						this->cacher()->refresh(ThreadId::N, std::any_cast<std::string>(pack.value()->args_pack().front()));
-					}) ;
+					}) 
+
+		->set_index("OfflineAlert")
+		->with_proc([this](std::optional<ArgsPack> pack)
+					{
+						this->cacher()->refresh(ThreadId::N, "Can not connect to server, please check internet connection");
+					})
+
+		->set_index("Debug")
+		->with_proc([this](std::optional<ArgsPack> pack)
+					{
+						this->cacher()->submit("DebugShow", std::any_cast<std::string>(pack.value()->args_pack().front()));
+					});
 	
 	this->set_proccall_map(builder.build());
 
@@ -62,13 +78,24 @@ Render* Render::start() noexcept
 
 				// check new animation
 				if (auto ani = this->cacher()->animations(); ani.has_value())
-					this->sktcher()->update(ani.value()), ani.value().clear();
+					this->sktcher()->update(ani.value());
 
 				// check new log
 				if (auto log = this->cacher()->logs(); log.has_value())
-					this->sktcher()->upload(log.value()), log.value().clear();
+					this->sktcher()->upload(log.value());
 
-				if (auto diff = expect - std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - srt).count(); diff > 0)
+				// increase frame counter 
+				frame_++;
+
+				// time the frame 
+				auto cost = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - srt).count();
+				if (frame_ % 20 == 0)
+				{
+					// log fps every 0.2s(default) 
+					auto realfps = cost < 10 ? fps : 1000 / cost;
+					this->cacher()->refresh(ThreadId::C, std::to_string(realfps));
+				}
+				if (auto diff = expect - cost; diff > 0)
 					Sleep(diff);
 				else
 					continue;
@@ -81,8 +108,8 @@ Render* Render::start() noexcept
 Render* Render::panic() noexcept
 {
 
-	this->cacher()->clear();
 	this->sktcher()->stop(); //->clear_object()->clear_task();
+	this->cacher()->clear();
 
 	closegraph();
 	return this;

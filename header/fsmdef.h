@@ -251,7 +251,6 @@ class StateMachine {
     // warp of StateBase<T>::on
     void execute() 
     {
-        clog("execute state, on:{}", this->cur_->as_str());
         this->cur_->on(this->owner_);
     }
 

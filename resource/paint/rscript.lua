@@ -38,9 +38,10 @@ local module = {
                 end
             end
         }
-
+        
+        
         Set.SetTextStyle(LogArgs.Hight, LogArgs.Width, LogArgs.Font)
-        Act.Xyout(0,        0,                      "Cli:"..LogArgs.GetLog(ThreadId.C))
+        Act.Xyout(0,        0,                      "FPS:"..LogArgs.GetLog(ThreadId.C))
         Act.Xyout(1400,     0,                      "Key:"..LogArgs.GetLog(ThreadId.U))
         Act.Xyout(0,        900 - LogArgs.Hight,    "Net:"..LogArgs.GetLog(ThreadId.N))
     end,
@@ -59,7 +60,6 @@ local module = {
                 LogTable[v] = logs[v]
             end
         end
-        print("lua: UploadLog called")
     end,
 
     UpdateTask = function (queue)
@@ -82,8 +82,11 @@ local module = {
     end,
 
     AddRenderLog = function (id, logstr)
+        if id == ThreadId.N then
+            local current = tostring(os.date("%M:%S"))
+            logstr = current..": "..logstr
+        end
         LogCache[id] = logstr
-        print("lua: AddRenderLog called, new log:"..logstr)
     end
 }
 

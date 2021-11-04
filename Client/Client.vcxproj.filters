@@ -48,6 +48,9 @@
     <ClCompile Include="..\src\client\assist.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="static.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\header\client\client.h">

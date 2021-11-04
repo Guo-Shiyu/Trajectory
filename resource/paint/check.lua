@@ -20,7 +20,7 @@ end
 --- sketcher.ensure()
 function SketcherEnsure()
 	print("-- check info from lua:\n")
-	CheckAll("Color", "Ani", "Object", "Set", "Act", "Render")
+	CheckAll("Color", "Ani", "Object", "Set", "Act", "Render", "Schedule")
 	print("-- check end")
 	return true;
 end

@@ -3,12 +3,6 @@
 
 #include <sstream>
 
-std::queue<std::string> Logger::cache_{};
-sol::state iConfig::configer_{};
-std::unordered_map<ThreadId, iMsg *> Dispatcher::map_{};
-std::vector<ProcIndex> CallMapBuilder::index_cache_{};
-size_t Protocol::LoginBuilder::req_num_{ 0 };
-
 void Client::prepare_for_light()
 {
     // get runtime dir
@@ -33,7 +27,12 @@ void Client::shine() noexcept
     try
     {
         while (not this->state_->in_state(state::client::Wrong::instance()))
+        {
+            // step each state machine indivaully
             this->state_->execute();
+            this->uio_->state()->execute();
+            this->net_->state()->execute();
+        }
     }
     catch (const std::exception &e)
     {
@@ -86,10 +85,15 @@ Client *Client::panic() noexcept
     return this;
 }
 
-Client *Client::i_say_there_would_be_light()
+Client* Client::instance()
 {
     static Client cli{};
     static std::once_flag oc{};
-    std::call_once(oc, [&](){ cli.lazy_init(); });
+    std::call_once(oc, [&]() { cli.lazy_init(); });
     return &cli;
+}
+
+Client *Client::i_say_there_would_be_light()
+{
+    return Client::instance();
 }

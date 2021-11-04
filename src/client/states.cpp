@@ -43,16 +43,21 @@ namespace state
         {
             // show sign in ani 
             c->render()->cacher()->submit("IntoSignIn");
+            Sleep(1000 * 5);
+
+            c->render()->cacher()->submit("MainMenu");
         }
 
         void SignIn::on(Client *c)
         {
-            Sleep(10000);
-            c->state()->into(state::client::Wrong::instance());
+            Sleep(300);
+            // c->state()->into(state::client::Wrong::instance());
         }
 
         void SignIn::off(Client *c)
         {
+            // flush 
+            c->render()->clear();
         }
 
         IMPL_STATE(PickRoom)
@@ -132,10 +137,28 @@ namespace state
         IMPL_STATE(Offline)
         void Offline::into(iNetIO *n)
         {
+            // log and set reconnect every 
+            clog("network wrong, client is offline now");
+            hv::ReconnectInfo reconn;
+            reconn.min_delay = 1000; // 1s 
+            reconn.max_delay = 5000; // 5s
+            reconn.delay_policy = 1; // wait 1, 2, 3, 4, 5, 5, 5s ...
+            n->connect()->setReconnect(&reconn);
         }
 
         void Offline::on(iNetIO *n)
         {
+            // offline timer 
+            static size_t counter{ 0 };
+            constexpr size_t sleeptime{ 1000 }, maxoffline{ 15 };   // 15s 
+
+
+            Sleep(sleeptime);
+            if (counter++ == maxoffline)
+            {
+                clog("too long without net, process has terminated. (not an error)");
+                Client::instance()->state()->into(state::client::Wrong::instance());
+            }
         }
 
         void Offline::off(iNetIO *n)
@@ -169,6 +192,9 @@ namespace state
                     auto info = std::format("disconnected to {}, connfd:{}\n", peeraddr.c_str(), channel->fd());
                     clog(info);
                     n->notify(ThreadId::R, "NetLog", ArgsPackBuilder::create(std::move(info)));
+
+                    // change state into offline state 
+                    n->state()->into(state::net::Offline::instance());
                 }
             };
 
@@ -178,17 +204,13 @@ namespace state
                 n->notify(ThreadId::N, "OnHello", ArgsPackBuilder::create(std::move(info)));
             };
 
-            hv::ReconnectInfo reconn;
-            reconn.min_delay = 1000;
-            reconn.max_delay = 10000;
-            reconn.delay_policy = 2;
-            cli->setReconnect(&reconn);
-
+            // start net thread
             cli->start(false);
         }
 
         void ToLoginServ::on(iNetIO *n)
         {
+            // unused fn
         }
 
         void ToLoginServ::off(iNetIO *n)
@@ -216,12 +238,16 @@ namespace state
         void SignIn::into(iUserIO *u)
         {
             u->set_mapper([&map = UserIO::SignInMap](const char key) noexcept {
-                if (map.contains(key))  map[key]();
+                if (map.contains(key))
+                    map[key]();
+                else
+                    clog("unknown key hit:{}", key);
             });
         }
 
         void SignIn::on(iUserIO *u)
         {
+            // unused fn
         }
 
         void SignIn::off(iUserIO *u)

@@ -17,6 +17,7 @@ protected:
 public:
     iSketcher * sktcher() const noexcept { return this->skter_; }
     iCache*     cacher() const noexcept { return this->cache_; }
+    iRender* clear() noexcept { this->cache_->clear(), this->skter_->clear_all(); return this; }
 };
 
 class Render : public iRender
