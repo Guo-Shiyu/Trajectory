@@ -64,20 +64,20 @@ local module = {
 
     UpdateTask = function (queue)
         for k, v in ipairs(queue) do 
-            print("Key: "..tostring(k).." Value: "..type(v));
+            -- print("Key: "..tostring(k).." Value: "..type(v));
             table.insert(TaskQue, v)
             --table.remove(queue, k) -- clear taskque in cache by cpp
         end
-        print("lua: UpdateTask called")
-        print("Cache's TaskQue len: "..#queue)
+        -- print("lua: UpdateTask called")
+        -- print("Cache's TaskQue len: "..#queue)
     end,
 
     --- fn for cache
     AddRenderTask = function (index, ...)
-        print("lua: index: "..index)
+        -- print("lua: index: "..index)
         local task = coroutine.create(Ani[index])
         local result, why = coroutine.resume(task, ...)
-        print("lua: AddRenderTask Called result: "..tostring(result).." why: "..tostring(why))
+        -- print("lua: AddRenderTask Called result: "..tostring(result).." why: "..tostring(why))
         table.insert(TaskCache, task)
     end,
 

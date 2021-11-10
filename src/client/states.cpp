@@ -63,7 +63,9 @@ namespace state
         IMPL_STATE(PickRoom)
         void PickRoom::into(Client *c)
         {
-        }
+            c->notify(ThreadId::N, "RequestRooms", std::nullopt);
+           
+        }   
 
         void PickRoom::on(Client *c)
         {
@@ -149,16 +151,16 @@ namespace state
         void Offline::on(iNetIO *n)
         {
             // offline timer 
-            static size_t counter{ 0 };
-            constexpr size_t sleeptime{ 1000 }, maxoffline{ 15 };   // 15s 
+            //static size_t counter{ 0 };
+            //constexpr size_t sleeptime{ 1000 }, maxoffline{ 15 };   // 15s 
 
 
-            Sleep(sleeptime);
-            if (counter++ == maxoffline)
-            {
-                clog("too long without net, process has terminated. (not an error)");
-                Client::instance()->state()->into(state::client::Wrong::instance());
-            }
+            //Sleep(sleeptime);
+            //if (counter++ == maxoffline)
+            //{
+            //    clog("too long without net, process has terminated. (not an error)");
+            //    Client::instance()->state()->into(state::client::Wrong::instance());
+            //}
         }
 
         void Offline::off(iNetIO *n)
@@ -182,8 +184,6 @@ namespace state
                 if (channel->isConnected()) 
                 {
                     auto info = std::format("connected to {}, connfd:{}\n", peeraddr.c_str(), channel->fd());
-                    /*Protocol::(ToWhere::Login, ProtoType::Hello, OrdSubType::Create)*/
-                    channel->write(Protocol::LoginBuilder::make().deal_type(ProtoType::Hello).build());
                     clog(info);
                     n->notify(ThreadId::R, "NetLog", ArgsPackBuilder::create(std::move(info)));
                 }
@@ -215,6 +215,7 @@ namespace state
 
         void ToLoginServ::off(iNetIO *n)
         {
+
         }
 
         IMPL_STATE(ToBattleServ)
@@ -228,6 +229,7 @@ namespace state
 
         void ToBattleServ::off(iNetIO *n)
         {
+
         }
     }
 
@@ -240,8 +242,6 @@ namespace state
             u->set_mapper([&map = UserIO::SignInMap](const char key) noexcept {
                 if (map.contains(key))
                     map[key]();
-                else
-                    clog("unknown key hit:{}", key);
             });
         }
 
@@ -254,16 +254,21 @@ namespace state
         {
         }
 
-        IMPL_STATE(OnlyKey)
-        void OnlyKey::into(iUserIO *u)
+        IMPL_STATE(PickRoom)
+        void PickRoom::into(iUserIO *u)
+        {
+            u->set_mapper([&map = UserIO::PickRoomMap](const char key) noexcept {
+                if (map.contains(key))
+                    map[key]();
+            });
+            u->notify(ThreadId::N, "SayHello", std::nullopt);
+        }
+
+        void PickRoom::on(iUserIO *u)
         {
         }
 
-        void OnlyKey::on(iUserIO *u)
-        {
-        }
-
-        void OnlyKey::off(iUserIO *u)
+        void PickRoom::off(iUserIO *u)
         {
         }
 

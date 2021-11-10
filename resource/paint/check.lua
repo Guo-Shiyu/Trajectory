@@ -3,7 +3,7 @@ function Check(tablename)
 	if _G[tablename] ~= nil then 
 		local count = 0;
 		for key, value in pairs(_G[tablename]) do
-			print(" - key:"..key.." \t type(value): "..type(value))
+			print(" - key:"..key.." \t\t type(value): "..type(value))
 			count = count + 1
 		end
 		print(" >> sum of "..tablename.." is :"..count.."\n")

@@ -68,6 +68,7 @@ Render* Render::start() noexcept
 		{
 			const auto& screen = this->configer()["Config"]["Render"]["MainScreen"];
 			int width = screen["Width"], hight = screen["Hight"];
+			// int cx = GetSystemMetrics(SM_CXSCREEN),  cy = GetSystemMetrics(SM_CYSCREEN);
 			int fps = screen["Fps"];
 			int expect = 1000 / fps;
 			initgraph(width, hight, SHOWCONSOLE);

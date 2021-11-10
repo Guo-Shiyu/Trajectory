@@ -60,5 +60,5 @@ public:
     UserIO *start() noexcept override final;
     UserIO *panic() noexcept override final;
 
-    static  KeyMap  SignInMap;
+    static  KeyMap  SignInMap, PickRoomMap;
 };

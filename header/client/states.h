@@ -30,7 +30,7 @@ namespace state {
         using UioState = StateBase<iUserIO>;
         _MACRO_USE_(
             GEN_STATE_3(UioState, iUserIO,
-                SignIn, OnlyKey, OnlyMouse
+                SignIn, PickRoom, OnlyMouse
             )
         )
     }

@@ -7,15 +7,29 @@ std::vector<ProcIndex> CallMapBuilder::index_cache_{};
 size_t Protocol::LoginBuilder::req_num_{ 0 };
 
 KeyMap UserIO::SignInMap = {
-	{'h', []()
+	// space -> pick room
+	{' ', []()
 		{
 			if (Client::instance()->nio()->state()->in_state(state::net::Offline::instance()))
 				Dispatcher::instance()->dispatch(ThreadId::R, ThreadId::U, "OfflineAlert", std::nullopt);
-			else 
-				Dispatcher::instance()->dispatch(ThreadId::N, ThreadId::U, "RequestRooms", std::nullopt);
+			else
+				Client::instance()->state()->into(state::client::PickRoom::instance());
+		}},
+
+	// esc -> exit game
+	{ (char)27, []() {	Client::instance()->state()->into(state::client::Wrong::instance()); }}
+
+};
+
+KeyMap UserIO::PickRoomMap = {
+	/*{'h', []()
+		{
+			if (Client::instance()->nio()->state()->in_state(state::net::Offline::instance()))
+				Dispatcher::instance()->dispatch(ThreadId::R, ThreadId::U, "OfflineAlert", std::nullopt);
+			else
+				Client::instance()->state()->into(state::client::PickRoom::instance());
 		}},
 
 
-	{'y', []() {	Dispatcher::instance()->dispatch(ThreadId::R, ThreadId::U, "Debug", ArgsPackBuilder::create(std::string("Y has been hitted"))); }}
+	{'y', []() {	Dispatcher::instance()->dispatch(ThreadId::R, ThreadId::U, "Debug", ArgsPackBuilder::create(std::string("Y has been hitted"))); }}*/
 };
-
