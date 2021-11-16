@@ -198,6 +198,10 @@ GEN_STATE_5(base, arg, _2, _3, _4, _5, _6)    \
 GEN_STATE(base, arg, _1)         \
 GEN_STATE_6(base, arg, _2, _3, _4, _5, _6, _7)    \
 
+#define GEN_STATE_8(base, arg, _1, _2, _3, _4, _5, _6, _7, _8) \
+GEN_STATE(base, arg, _1)         \
+GEN_STATE_7(base, arg, _2, _3, _4, _5, _6, _7, _8)    \
+
 template<class C>
 class StateBase {
     public:

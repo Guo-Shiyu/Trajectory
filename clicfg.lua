@@ -2,11 +2,13 @@
 --- Config
 local module = 
 {
-    Client = {
+    Client = 
+    {
         ResourcePath = "D:\\GitBranch\\GitHub\\Trajectory\\resource",
-        SelfDescriptor = {
+        SelfDescriptor = 
+        {
             --Uid   =   "nil",
-            Name  =   "hiahiahia",
+            Name  =   "h123言",
             Player    =
             {
                 Weapon    =   1,
@@ -34,56 +36,10 @@ local module =
     
     NetIO = 
     {
-        LoginServerAddr = "172.31.163.141", 
+        LoginServerAddr = "172.31.162.129", 
         TargetPort  = 24680,
         
-        
-        Protocal = 
-        {
-            ToLoginServer = [[{"Type":"request","SubType":1,"ReqCounter":0,"Appendix":{}}]]
-        }
     },
-
-    UserIO = 
-    {
-           KeySet = "Default",
-    }
 }
-
--- 序列化tablle表--將表转化成string
-function Serialize(obj)
-    local lua = ""
-    local t = type(obj)
-    if t == "number" then
-        lua = lua .. obj
-    elseif t == "boolean" then
-        lua = lua .. tostring(obj)
-    elseif t == "string" then
-        lua = lua .. string.format("%q", obj)
-    elseif t == "table" then
-        lua = lua .. "{\n\t"
-        for k, v in pairs(obj) do
-            lua = lua .. "[" .. Serialize(k) .. "]=" .. Serialize(v) .. ",\n"
-        end
-        local metatable = getmetatable(obj)
-        if metatable ~= nil and type(metatable.__index) == "table" then
-            for k, v in pairs(metatable.__index) do
-                lua = lua .. "[" .. Serialize(k) .. "]=" .. Serialize(v) .. ",\n"
-            end
-        end
-        lua = lua .. "}"
-    elseif t == "nil" then
-        return nil
-    else
-        return "-nil-" 
-        --error("can not Serialize a " .. t .. " type.")
-    end
-    return lua
-end
-
-function ConfigDump()
-    print(" Config Dump: ")
-    -- print(Serialize(module))
-end
 
 return module

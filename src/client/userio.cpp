@@ -24,7 +24,7 @@ UserIO* UserIO::start() noexcept
 			if (ExMessage exmsg; peekmessage(&exmsg, (BYTE)255U, true))
 				if (exmsg.message == WM_CHAR)
 				{
-					this->notify(ThreadId::R, "InputLog", ArgsPackBuilder::create(exmsg));
+					Dispatcher::dispatch(ThreadId::R, "InputLog", ArgsPackBuilder::create(exmsg));
 					this->mapper_(toascii(exmsg.vkcode));
 				}
 		});

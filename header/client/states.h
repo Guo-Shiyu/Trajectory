@@ -11,8 +11,8 @@ namespace state {
     namespace client {
         using GlobalState = StateBase<Client>;
         _MACRO_USE_(
-            GEN_STATE_7(GlobalState, Client, 
-                Prepare, SignIn, PickRoom, Battle, Satistic, Wrong, Develop
+            GEN_STATE_8(GlobalState, Client, 
+                Prepare, SignIn, PickRoom, InRoom, Battle, Satistic, Wrong, Develop
             )
         )
     }

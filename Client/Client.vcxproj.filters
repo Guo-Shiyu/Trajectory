@@ -21,7 +21,7 @@
     <ClCompile Include="..\src\client\client.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\client\dispatcher.cpp">
+    <ClCompile Include="..\src\client\proccall.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="..\src\client\game.cpp">
@@ -48,7 +48,7 @@
     <ClCompile Include="..\src\client\assist.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="static.cpp">
+    <ClCompile Include="..\src\client\static.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
@@ -59,7 +59,7 @@
     <ClInclude Include="..\header\client\game.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="..\header\client\icommunication.h">
+    <ClInclude Include="..\header\client\ilpc.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="..\header\client\iinit.h">
@@ -93,6 +93,9 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="..\header\client\assist.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\header\client\backround.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

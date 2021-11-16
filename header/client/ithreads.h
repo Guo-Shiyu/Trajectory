@@ -4,13 +4,13 @@
 #include "../hv/singleton.h"
 #include "../log.h"
 
-#include "icommunication.h"
+#include "ilpc.h"
 #include "iluavm.h"
 
 using json = nlohmann::json;
 
 template<typename S, typename T>
-class WorkThread : virtual public iInit, virtual public iMsg, virtual public iConfig
+class WorkThread : virtual public iInit, virtual public iConfig
 {
     public:
     using SelfState = S;

@@ -60,5 +60,6 @@ public:
     UserIO *start() noexcept override final;
     UserIO *panic() noexcept override final;
 
+    // defined in 'static.cpp' 
     static  KeyMap  SignInMap, PickRoomMap;
 };

@@ -4,13 +4,12 @@
 #include "assist.h"
 
 #include <vector>
-#include <initializer_list>
-#include <any>
 #include <array>
+#include <initializer_list>
 #include <string_view>
 #include <functional>
 #include <unordered_map>
-#include <memory>
+#include <any>
 #include <optional>
 
 enum class ThreadId : size_t
@@ -26,7 +25,7 @@ struct Map
 {
     std::array<std::pair<Key, Value>, Size> data;
 
-    [[nodiscard]] // should not discard return value
+    // [[nodiscard]] // should not discard return value
     constexpr Value
     at(const Key &key) const noexcept
     {
@@ -36,7 +35,8 @@ struct Map
                          { return v.first == key; });
         if (itr != std::end(data))
             return itr->second;
-        else
+        else 
+            // unreachable code 
             return "unkown error condition";
     }
 };
@@ -113,107 +113,18 @@ using ProcIndex     = std::string_view;
 using MsgHandler    = std::function<void(std::optional<ArgsPack>)>;
 using CallMap       = std::unordered_map<ProcIndex, MsgHandler>;
 
-// all member func are not thread safe
-class CallMapBuilder
+namespace Dispatcher
 {
-private:
-    CallMap inner_;
-    static std::vector<ProcIndex> index_cache_;
 
-public:
-    CallMapBuilder() : inner_()
-    {
-        index_cache_.clear();
-    }
+// defined in 'dispather.cpp' 
+extern std::unordered_map<ThreadId, CallMap> LpcMap;
 
-    ~CallMapBuilder() = default;
-
-    CallMapBuilder *append(const ProcIndex &index, const MsgHandler &hand) noexcept
-    {
-        this->inner_.try_emplace(index, hand);
-        return this;
-    }
-
-    CallMapBuilder *set_indexs(std::initializer_list<ProcIndex> &idxs)
-    {
-        if (index_cache_.size() != 0)
-            throw "call map builder: index cache not empty";
-        for (auto &i : idxs)
-            index_cache_.push_back(i);
-        return this;
-    }
-
-    CallMapBuilder *with_procs(std::initializer_list<MsgHandler> &handlers)
-    {
-        if (index_cache_.size() != handlers.size())
-            throw "call map builder: procs not match indexs";
-
-        auto i = this->index_cache_.begin();
-        auto j = handlers.begin();
-        for (size_t k = 0; k < handlers.size(); k++)
-            this->append(std::move(*i), *j);
-
-        return this;
-    }
-
-    CallMapBuilder *set_index(ProcIndex idx)
-    {
-        index_cache_.push_back(idx);
-        return this;
-    }
-
-    CallMapBuilder *with_proc(MsgHandler&& handler)
-    {
-        this->append(std::move(index_cache_.back()), std::move((handler)));
-        return this;
-    }
-
-    CallMap build() noexcept
-    {
-        return std::move(this->inner_);
-    }
-};
-
-class iMsg
+// public interface : dispatch msg to other thread 
+inline void dispatch(const ThreadId target, ProcIndex index, std::optional<ArgsPack> args) noexcept
 {
-protected:
-    std::unique_ptr<CallMap> fnmap_;
-    iMsg() : fnmap_(nullptr) {}
+    Dispatcher::LpcMap.at(target)			// get target thread's CallMap
+                        .at(index)			// get target fn with designed index 
+                      /*.call*/(args);		// call fn with args
+}
 
-public:
-    // init proc-call map
-    iMsg *set_proccall_map(CallMap &&map)
-    {
-        this->fnmap_ = std::make_unique<CallMap>(std::forward<CallMap>(map));
-        return this;
-    }
-
-    // on message
-    virtual void response(const ThreadId sender, ProcIndex i, std::optional<ArgsPack> args) noexcept;
-
-    // notify other thread with a message
-    virtual void notify(const ThreadId target, ProcIndex i, std::optional<ArgsPack> args) noexcept;
-
-    virtual ~iMsg() {}
-};
-
-class Dispatcher : public iInit
-{
-private:
-    static std::unordered_map<ThreadId, iMsg*> map_;
-
-    constexpr Dispatcher() {}
-
-    // regist thread map
-    Dispatcher* lazy_init() noexcept override final;
-
-    // #[allow(unimplemented)]
-    void destory();
-
-public:
-    // dispatch msg
-    void dispatch(const ThreadId target, const ThreadId sender, ProcIndex index, std::optional<ArgsPack> arg) const noexcept;
-
-    //singleton 
-    static Dispatcher* instance() noexcept;
-};
+}

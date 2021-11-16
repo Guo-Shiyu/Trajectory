@@ -20,36 +20,6 @@ Render* Render::lazy_init() noexcept
 	resources.concat("\\paint"); // ../Trajectory/resource
 	load_all_mod(this->skter_->luavm(), resources);
 	load_all_mod(this->cache_->luavm(), resources);
-
-	// gen call_map here
-	CallMapBuilder builder{};
-	builder.set_index("InputLog")
-		->with_proc([this](std::optional<ArgsPack> pack)
-					{
-						this->cacher()->refresh(ThreadId::U,
-												as_str(std::any_cast<ExMessage>(pack.value()->args_pack().front()).vkcode));
-					})
-
-		->set_index("NetLog")
-		->with_proc([this](std::optional<ArgsPack> pack)
-					{
-						this->cacher()->refresh(ThreadId::N, std::any_cast<std::string>(pack.value()->args_pack().front()));
-					}) 
-
-		->set_index("OfflineAlert")
-		->with_proc([this](std::optional<ArgsPack> pack)
-					{
-						this->cacher()->refresh(ThreadId::N, "Can not connect to server, please check internet connection");
-					})
-
-		->set_index("Debug")
-		->with_proc([this](std::optional<ArgsPack> pack)
-					{
-						this->cacher()->submit("DebugShow", std::any_cast<std::string>(pack.value()->args_pack().front()));
-					});
-	
-	this->set_proccall_map(builder.build());
-
 	return this;
 }
 
@@ -84,6 +54,10 @@ Render* Render::start() noexcept
 				// check new log
 				if (auto log = this->cacher()->logs(); log.has_value())
 					this->sktcher()->upload(log.value());
+
+				// draw back round 
+				if (this->backrd() != nullptr)
+					backrd()->display_by(std::nullopt, focusx(), focusy());
 
 				// increase frame counter 
 				frame_++;

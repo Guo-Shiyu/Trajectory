@@ -20,17 +20,17 @@ namespace state
 
         void Prepare::on(Client *c)
         {
+            // check initialize work and fix invalid data 
             c->ensure();
+
+#ifdef _DEBUG
             auto net = c->netio()->state();
             auto uio = c->uio()->state();
             clog("check success, net state:{}, userio state:{}",
                  net->get_curent()->as_str(), uio->get_curent()->as_str());
+#endif // _DEBUG
 
-            auto state = c->state();
-            if (net->in_state(state::net::Offline::instance()))
-                state->into(state::client::Develop::instance());
-            else
-                state->into(state::client::SignIn::instance());
+            c->state()->into(state::client::SignIn::instance());
         }
 
         void Prepare::off(Client *c)
@@ -51,11 +51,15 @@ namespace state
         void SignIn::on(Client *c)
         {
             Sleep(300);
-            // c->state()->into(state::client::Wrong::instance());
+            // TODO: draw some animation in main menu
+            // The Sliver Tree 
         }
 
         void SignIn::off(Client *c)
         {
+            // report self infomation 
+            Dispatcher::dispatch(ThreadId::N, "SayHello", std::nullopt);
+
             // flush 
             c->render()->clear();
         }
@@ -63,16 +67,36 @@ namespace state
         IMPL_STATE(PickRoom)
         void PickRoom::into(Client *c)
         {
-            c->notify(ThreadId::N, "RequestRooms", std::nullopt);
-           
+            Dispatcher::dispatch(ThreadId::N, "RequestRooms", std::nullopt);
         }   
 
         void PickRoom::on(Client *c)
         {
+            // request room data every two second 
+            Sleep(2 * 1000);
+            Dispatcher::dispatch(ThreadId::N, "RequestRooms", std::nullopt);
         }
 
         void PickRoom::off(Client *c)
         {
+
+        }
+
+        IMPL_STATE(InRoom)
+        void InRoom::into(Client *c)
+        {
+
+        
+        }
+
+        void InRoom::on(Client* c)
+        {
+
+        }
+
+        void InRoom::off(Client* c)
+        {
+
         }
 
         IMPL_STATE(Battle)
@@ -111,7 +135,6 @@ namespace state
         {
             clog("progress exit");
             Logger::log_dump();
-            iConfig::config_dump();
         }
 
         void Wrong::off(Client *c)
@@ -150,6 +173,9 @@ namespace state
 
         void Offline::on(iNetIO *n)
         {
+            if (n->connect()->channel->isConnected())
+                n->state()->into(state::net::ToLoginServ::instance());
+
             // offline timer 
             //static size_t counter{ 0 };
             //constexpr size_t sleeptime{ 1000 }, maxoffline{ 15 };   // 15s 
@@ -170,38 +196,50 @@ namespace state
         IMPL_STATE(ToLoginServ)
         void ToLoginServ::into(iNetIO *n)
         {
-            clog("Nio into state ToLoginServer");
+            clog("Netio into state ToLoginServer");
+            
             auto cli = n->connect();
             const auto& config = Client::configer()["Config"]["NetIO"];
             std::string addr = config["LoginServerAddr"];
             int port = config["TargetPort"];
             int connfd = cli->createsocket(port, addr.c_str());
-            // std::string hello = config["Protocal"]["Hello"];
+
+#ifdef _DEBUG
             assert(connfd >= 0);
+#endif // _DEBUG
 
             cli->onConnection = [n](const hv::SocketChannelPtr& channel) {
                 std::string peeraddr = channel->peeraddr();
-                if (channel->isConnected()) 
-                {
-                    auto info = std::format("connected to {}, connfd:{}\n", peeraddr.c_str(), channel->fd());
-                    clog(info);
-                    n->notify(ThreadId::R, "NetLog", ArgsPackBuilder::create(std::move(info)));
-                }
+                std::string info;
+                if (channel->isConnected())
+                    info = std::format("connected to {}, connfd:{}\n", peeraddr.c_str(), channel->fd());
                 else
                 {
-                    auto info = std::format("disconnected to {}, connfd:{}\n", peeraddr.c_str(), channel->fd());
-                    clog(info);
-                    n->notify(ThreadId::R, "NetLog", ArgsPackBuilder::create(std::move(info)));
+                    info = std::format("disconnected to {}, connfd:{}\n", peeraddr.c_str(), channel->fd());
 
                     // change state into offline state 
                     n->state()->into(state::net::Offline::instance());
                 }
+            
+#ifdef _DEBUG
+                clog(info);
+                Dispatcher::dispatch(ThreadId::R, "NetLog", ArgsPackBuilder::create(std::move(info)));
+#endif // _DEBUG
+
             };
 
             cli->onMessage = [n](const hv::SocketChannelPtr& channel, hv::Buffer* buf) {
-                std::string info{static_cast<char*>(buf->data()), buf->size()};
-                n->notify(ThreadId::R, "NetLog", ArgsPackBuilder::create(info));
-                n->notify(ThreadId::N, "OnHello", ArgsPackBuilder::create(std::move(info)));
+                std::string pack{static_cast<char*>(buf->data()), buf->size()};
+               
+#ifdef _DEBUG
+                // show net message on screen 
+                Dispatcher::dispatch(ThreadId::R, "NetLog", ArgsPackBuilder::create(pack));
+#endif // _DEBUG
+
+                if (n->state()->in_state(state::net::ToLoginServ::instance()))
+                    Protocol::response(Protocol::MsgFrom::LoginServer, pack);
+                else
+                    Protocol::response(Protocol::MsgFrom::BattleServer, pack);
             };
 
             // start net thread
@@ -261,7 +299,7 @@ namespace state
                 if (map.contains(key))
                     map[key]();
             });
-            u->notify(ThreadId::N, "SayHello", std::nullopt);
+            Dispatcher::dispatch(ThreadId::N, "SayHello", std::nullopt);
         }
 
         void PickRoom::on(iUserIO *u)
