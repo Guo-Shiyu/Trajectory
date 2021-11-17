@@ -89,3 +89,24 @@ private:
 	size_t realw_, realh_;
 	size_t col_, row_;
 };
+
+
+//BackRound back(scnWidth, scnHeight);
+	//BackRound::Processor testproc = [](BackRound& bits)
+	//{
+	//	for (size_t y = bits.row() / 2 + 20; y < bits.row(); y++)
+	//		for (size_t x = 0; x < bits.colume(); x++)
+	//			bits.set_bit(y, x, true);
+	// 
+	//	size_t centerx = 50, centery = 50, r = 30;
+	//	for (size_t y = 0; y < bits.row() / 2; y++)
+	//		for (size_t x = 0; x < bits.colume(); x++)
+	//		{
+	//			auto offsetbetween = [](auto a, auto b) { return std::llabs(b - a); };
+	//			size_t xoffset = offsetbetween(x, centerx), yoffset = offsetbetween(y, centery);
+	//			if (xoffset * xoffset + yoffset * yoffset < r * (r - 1))
+	//				bits.set_bit(x, y, true);
+	//		}
+	//};
+	// 
+	//back.process_by(testproc);

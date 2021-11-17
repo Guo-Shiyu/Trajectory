@@ -28,9 +28,15 @@ KeyMap UserIO::PickRoomMap = {
 		'c', []()
 		{
 			// room : json as str 
-			// todo: regist inputbox to luavm 
-			//std::string rooms =  Client::instance()->configer()["Cmd"]["NewRoom"].call();
-			//Dispatcher::dispatch(ThreadId::N, "CreateRoom", ArgsPackBuilder::create(std::move(rooms)));
+			//todo: regist inputbox to luavm 
+			
+			// std::string rooms =  Client::instance()->configer()["Cmd"]["NewRoom"].call();
+			// TEST DATA 
+			json rd; // room descriptor
+			rd["Name"] = "MyRoom";
+			rd["Area"] = "Default";
+
+			Dispatcher::dispatch(ThreadId::N, "CreateRoom", ArgsPackBuilder::create(std::move(rd)));
 		}},
 
 	// j -> join a room

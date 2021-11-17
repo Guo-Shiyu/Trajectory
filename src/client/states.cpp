@@ -68,6 +68,7 @@ namespace state
         void PickRoom::into(Client *c)
         {
             Dispatcher::dispatch(ThreadId::N, "RequestRooms", std::nullopt);
+            c->uio()->state()->into(state::uio::PickRoom::instance());
         }   
 
         void PickRoom::on(Client *c)

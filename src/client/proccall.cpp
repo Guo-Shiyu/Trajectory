@@ -33,10 +33,10 @@ std::unordered_map<ThreadId, CallMap> Dispatcher::LpcMap =
 							->connect()
 							->channel
 							->write(Protocol::LoginBuilder::make()
-															.deal_type("Hello")
-															.deal_subtype("Hello")
-															.deal_appendix(hloapdx)
-															.build());
+									.deal_type("Hello")
+									.deal_subtype("Hello")
+									.deal_appendix(hloapdx)
+									.build());
 				}
 			},
 
@@ -48,9 +48,27 @@ std::unordered_map<ThreadId, CallMap> Dispatcher::LpcMap =
 					net->connect()
 						->channel
 						->write(Protocol::LoginBuilder::make()
-														.deal_type("Request")
-														.deal_subtype("Room")
-														.build());
+								.deal_type("Request")
+								.deal_subtype("Room")
+								.build());
+				}
+			},
+
+			{
+				"CreateRoom", [](std::optional<ArgsPack> pack)
+				{
+					assert(NetIO::instance()->state()->in_state(state::net::ToLoginServ::instance()));
+					
+					json roomdesctiptor = std::any_cast<json>(pack.value()->args_pack().front());
+
+					auto net = NetIO::instance();
+					net->connect()
+						->channel
+						->write(Protocol::LoginBuilder::make()
+								.deal_type("Order")
+								.deal_subtype("CreateRoom")
+								.deal_appendix(roomdesctiptor)
+								.build());
 				}
 			}
 	}},
@@ -99,11 +117,24 @@ std::unordered_map<ThreadId, CallMap> Dispatcher::LpcMap =
 			{
 				"DisplayRoomList", [](std::optional<ArgsPack> pack)
 				{
-					// roomlist: json as str 
-					auto roomlist = std::any_cast<std::string>(pack.value()->args_pack().front());
+					// roomlist: json 
+					auto roomlist = std::any_cast<json>(pack.value()->args_pack().front());
+					
+					std::string str = roomlist.dump();
+					std::cout << "Request Room List Result: " << str << std::endl;
+					
 					// Render::instance()
 						// ->surface()
 						// ->stick("some-name-in-lua", std::move(roomlist))
+				}
+			},
+
+			{
+				"DisplayCreateResult", [](std::optional<ArgsPack> pack)
+				{
+					// result: json as str 
+					auto result = std::any_cast<std::string>(pack.value()->args_pack().front());
+					std::cout << "Create Room result: " << result << std::endl;
 				}
 			},
 
@@ -145,11 +176,24 @@ Protocol::NetMsgResponser Protocol::LoginRpcMap =
 				"Room", [](const json& packet)
 				{
 					// notify render show room list 
-					Dispatcher::dispatch(ThreadId::R, "DisplayRoomList", ArgsPackBuilder::create(packet["Appendix"].dump()));
+					Dispatcher::dispatch(ThreadId::R, "DisplayRoomList", ArgsPackBuilder::create(packet["Appendix"]));
 				}
 			},
 		}
-	}
+	},
+
+	{
+		"Return",
+		{
+			{
+				"CreateRoom", [](const json& packet)
+				{
+					// notify render show room list 
+					Dispatcher::dispatch(ThreadId::R, "DisplayCreateResult", ArgsPackBuilder::create(packet["Appendix"].dump()));
+		}
+	},
+}
+}
 };
 
 Protocol::NetMsgResponser Protocol::BattleRpcMap = {};
