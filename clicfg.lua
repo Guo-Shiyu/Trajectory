@@ -7,17 +7,13 @@ local module =
         ResourcePath = "D:\\GitBranch\\GitHub\\Trajectory\\resource",
         SelfDescriptor = 
         {
-            --Uid   =   "nil",
-            Name  =   "h123言",
-            Player    =
+            Name    =   "h123言",
+            Weapon  =   1,
+            Style   =
             {
-                Weapon    =   1,
-                Style     =
-                {
-                    FaceColor =  321,
-                    HelmetColor   =  321,
-                    FigureColor   =   321
-                }
+                FaceColor   =  321,
+                HelmetColor =  321,
+                FigureColor =  321
             }
         },
     },
@@ -26,8 +22,8 @@ local module =
     {
         MainScreen = 
         {
-            Hight = 900,
-            Width = 1500,
+            Hight = 952,
+            Width = 1540,
             Fps   = 100,
         },
         
@@ -36,7 +32,7 @@ local module =
     
     NetIO = 
     {
-        LoginServerAddr = "172.24.226.48", 
+        LoginServerAddr = "172.19.160.154", 
         TargetPort  = 24680,
         
     },

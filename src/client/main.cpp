@@ -50,19 +50,36 @@ using God = Client;
 [[nodiscard("hiahia")]]
 int main()
 {
-	auto sprit = Sprite::create(
-		[](int x, int y) -> bool
-		{
-			static int r = 50;
-		}
-	);
 	
-
-
 	God::prepare_for_light();
 	auto light = God::i_say_there_would_be_light();
 	return light->shine();
 }
+
+//
+//initgraph(1540, 952);
+//BeginBatchDraw();
+//BackRound back(1540, 952);
+//BackRound::Processor testproc = [](BackRound& bits)
+//{
+//	for (size_t y = bits.row() / 2 + 20; y < bits.row(); y++)
+//		for (size_t x = 0; x < bits.colume(); x++)
+//			bits.set_bit(y, x, true);
+//
+//	size_t centerx = 50, centery = 50, r = 30;
+//	for (size_t y = 0; y < bits.row() / 2; y++)
+//		for (size_t x = 0; x < bits.colume(); x++)
+//		{
+//			auto offsetbetween = [](auto a, auto b) { return std::llabs(b - a); };
+//			size_t xoffset = offsetbetween(x, centerx), yoffset = offsetbetween(y, centery);
+//			if (xoffset * xoffset + yoffset * yoffset < r * (r - 1))
+//				bits.set_bit(x, y, true);
+//		}
+//};
+//
+//back.process_by(testproc);
+//back.display_by();
+//EndBatchDraw();
 
 
 #else

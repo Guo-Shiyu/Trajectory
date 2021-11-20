@@ -28,9 +28,9 @@ KeyMap UserIO::PickRoomMap = {
 		'c', []()
 		{
 			// room : json as str 
-			//todo: regist inputbox to luavm 
-			
+			//todo: regist inputbox to luavm
 			// std::string rooms =  Client::instance()->configer()["Cmd"]["NewRoom"].call();
+			
 			// TEST DATA 
 			json rd; // room descriptor
 			rd["Name"] = "MyRoom";
@@ -44,10 +44,11 @@ KeyMap UserIO::PickRoomMap = {
 		'j', []() 
 		{	
 			// todo: invalid input check 
-			wchar_t s[32];
-			InputBox(s, 10, L"");
+			wchar_t buf[32];
+			InputBox(buf, 10, L"room id: ");
 
-			// 将用户输入转换为数字
-			int r = _wtoi(s);
+			// convert user input to number 
+			int id = _wtoi(buf);
+			Dispatcher::dispatch(ThreadId::N, "JoinRoom", ArgsPackBuilder::create(std::move(id)));
 		}}
 };

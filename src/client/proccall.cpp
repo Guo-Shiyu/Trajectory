@@ -6,11 +6,27 @@
 
 std::unordered_map<ThreadId, CallMap> Dispatcher::LpcMap =
 {
-	// empty now 
-	{ThreadId::C, {}},
+	//
+	{
+		ThreadId::C, 
+		{
+			{
+				"RegistRoomInfo", [](std::optional<ArgsPack> pack)
+				{
+					// field depend on server reply 
+					json selfrd = std::any_cast<json>(pack.value()->args_pack().front());
+					
+					std::cout << std::format("RegistRoomInfo called, info:{}", selfrd.dump()) << std::endl;
+					// save it in configuration
+					// Client::instance()->game_info()->fill_roominfo(std::move(selfrd));
+				}
+			},
+		}
+	},
 
 	// 
-	{ThreadId::N,
+	{
+		ThreadId::N,
 		{
 			{
 				"SayHello", [](std::optional<ArgsPack> pack)
@@ -19,14 +35,17 @@ std::unordered_map<ThreadId, CallMap> Dispatcher::LpcMap =
 					static json hloapdx{};	// appendix of 'Hello' json  
 					static std::once_flag flag{};
 
+					// init selfinfo once 
 					std::call_once(flag, []()
 						{
+							// load self infomation from configuration 
 							auto& self = hloapdx;
 							const sol::table& cfg = Client::configer()["Config"]["Client"]["SelfDescriptor"];
 							self["Name"] = cfg["Name"].get<std::string>();
-		
-							// self["xxxx"] = cfg["xxxxx"]
-							// impl in future ... 
+							self["Weapon"] = cfg["Weapon"].get<int>();
+							const auto& style = cfg["Style"].get<sol::table>();
+							for (auto& [k, v] : style)
+								self[k.as<std::string>()] = v.as<int>();
 						});
 
 					NetIO::instance()
@@ -44,8 +63,9 @@ std::unordered_map<ThreadId, CallMap> Dispatcher::LpcMap =
 				"RequestRooms", [](std::optional<ArgsPack> pack)
 				{
 					assert(NetIO::instance()->state()->in_state(state::net::ToLoginServ::instance()));
-					auto net = NetIO::instance();
-					net->connect()
+					
+					NetIO::instance()
+						->connect()
 						->channel
 						->write(Protocol::LoginBuilder::make()
 								.deal_type("Request")
@@ -59,15 +79,35 @@ std::unordered_map<ThreadId, CallMap> Dispatcher::LpcMap =
 				{
 					assert(NetIO::instance()->state()->in_state(state::net::ToLoginServ::instance()));
 					
-					json roomdesctiptor = std::any_cast<json>(pack.value()->args_pack().front());
+					// rd: room desctiptor, require two field: "Name", "Area"
+					json rd = std::any_cast<json>(pack.value()->args_pack().front());
 
-					auto net = NetIO::instance();
-					net->connect()
+					NetIO::instance()
+						->connect()
 						->channel
 						->write(Protocol::LoginBuilder::make()
 								.deal_type("Order")
 								.deal_subtype("CreateRoom")
-								.deal_appendix(roomdesctiptor)
+								.deal_appendix(rd)
+								.build());
+				}
+			},
+
+			{
+				"JoinRoom", [](std::optional<ArgsPack> pack)
+				{
+					assert(NetIO::instance()->state()->in_state(state::net::ToLoginServ::instance()));
+
+					int id = std::any_cast<int>(pack.value()->args_pack().front());
+					json apdx; apdx["TargetId"] = id;
+
+					NetIO::instance()
+						->connect()
+						->channel
+						->write(Protocol::LoginBuilder::make()
+								.deal_type("Order")
+								.deal_subtype("JoinRoom")
+								.deal_appendix(apdx)
 								.build());
 				}
 			}
@@ -120,21 +160,39 @@ std::unordered_map<ThreadId, CallMap> Dispatcher::LpcMap =
 					// roomlist: json 
 					auto roomlist = std::any_cast<json>(pack.value()->args_pack().front());
 					
-					std::string str = roomlist.dump();
-					std::cout << "Request Room List Result: " << str << std::endl;
-					
-					// Render::instance()
-						// ->surface()
-						// ->stick("some-name-in-lua", std::move(roomlist))
+					int roomcount = roomlist["Count"];
+					sol::table rmarray;
+					for (const auto& rm : roomlist["RoomList"])
+					{
+						sol::table tmp;
+						tmp["Name"] = rm["Name"].get<std::string>();
+						tmp["Area"] = rm["Area"].get<std::string>();
+						// ... others 
+
+						rmarray.add(tmp);
+					}
+
+					Render::instance()
+						->clear()
+						->cacher()
+						->submit("DisplayRoomList", std::move(rmarray), roomcount)
+						->refresh(ThreadId::N, roomlist.dump());
 				}
 			},
 
 			{
 				"DisplayCreateResult", [](std::optional<ArgsPack> pack)
 				{
-					// result: json as str 
-					auto result = std::any_cast<std::string>(pack.value()->args_pack().front());
-					std::cout << "Create Room result: " << result << std::endl;
+					// result: json 
+					auto result = std::any_cast<json>(pack.value()->args_pack().front());
+					if (not result["Result"].get<bool>()) // create room fail
+					{
+						std::string reason = result["Reason"].get<std::string>();
+						Render::instance()
+							->cacher()
+							->refresh(ThreadId::N, std::format("Can not create new room, reason: {}", reason));
+					}
+					std::cout << "Create Room result: " << result.dump() << std::endl;
 				}
 			},
 
@@ -188,12 +246,41 @@ Protocol::NetMsgResponser Protocol::LoginRpcMap =
 			{
 				"CreateRoom", [](const json& packet)
 				{
+					const auto& ret = packet["Appendix"];
+					
+					// notify render to show create reasult 
+					Dispatcher::dispatch(ThreadId::R, "DisplayCreateResult", ArgsPackBuilder::create(ret));
+					
+					if (ret["Result"].get<bool>()) {	// success 
+						// notify client to record self room info   
+						Dispatcher::dispatch(ThreadId::C, "RegistRoomInfo", ArgsPackBuilder::create(ret["RoomInfo"]));
+						
+						// change state
+						Client::instance()->state()->into(state::client::InRoom::instance());
+					}
+
+					// else: stay in pick room state, do nothing   
+				}
+			},
+
+			{
+				"JoinRoom", [](const json& packet)
+				{
+					const auto& ret = packet["Appendix"];
+					Render::instance()
+						->cacher()
+						->refresh(ThreadId::N, std::format("Join room reply: {}", ret.dump()));
 					// notify render show room list 
-					Dispatcher::dispatch(ThreadId::R, "DisplayCreateResult", ArgsPackBuilder::create(packet["Appendix"].dump()));
+					//Dispatcher::dispatch(ThreadId::R, "DisplayJoinResult", ArgsPackBuilder::create(ret));
+					//
+					//if (ret["Result"].get<bool>()) {	// success 
+					//	Client::instance()->state()->into(state::client::InRoom::instance());
+					//}
+					// else: stay in pick room state  
+				}
+			},
 		}
-	},
-}
-}
+	}
 };
 
 Protocol::NetMsgResponser Protocol::BattleRpcMap = {};

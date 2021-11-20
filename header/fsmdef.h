@@ -246,9 +246,6 @@ class StateMachine {
     {
         if(this->cur_ != nullptr) this->cur_->off(this->owner_);
         this->set_current(new_state);
-        clog("change state, from: {}, into: {}",
-            this->pre_ == nullptr ? "NullState" : this->pre_->as_str(),
-            this->cur_->as_str());
         this->cur_->into(this->owner_);
     }
 

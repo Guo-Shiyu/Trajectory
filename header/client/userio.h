@@ -13,16 +13,16 @@ using KeyMap = std::unordered_map<char, std::function<void()>>;
 class iUserIO : public WorkThread<StateMachine<iUserIO>, hv::EventLoopThread>
 {
 protected:
-    std::function<void(const char)> mapper_;
+    KeyMap* mapper_;
 public:
-    iUserIO() : WorkThread(), mapper_() {}
+    iUserIO() : WorkThread(), mapper_(nullptr) {}
     iUserIO* set_mapper(decltype(mapper_) mapper)
     {
         this->mapper_ = mapper;
         return this;
     }
 
-    const decltype(mapper_)& kmapper() noexcept 
+    const decltype(mapper_) kmapper() noexcept 
     {
         return this->mapper_;
     }

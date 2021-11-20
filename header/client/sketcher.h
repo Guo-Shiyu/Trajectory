@@ -10,7 +10,8 @@
 class iRenderAssembly : public iLua
 {
 protected:
-	iRenderAssembly() : iLua() {};
+	std::mutex lock_;
+	iRenderAssembly() : iLua(), lock_() {};
 	virtual ~iRenderAssembly() {};
 
 	iRenderAssembly* open_libraries() noexcept
@@ -89,11 +90,10 @@ private:
 	static constexpr std::string_view LOGS_CACHE = "LogCache";
 
 protected:
-	std::mutex lock_;
 	std::atomic_bool log_modified_;
 	std::atomic_bool task_modified_;
 
-	iCache() : lock_(), log_modified_(false), task_modified_(false) {}
+	iCache() : log_modified_(false), task_modified_(false) {}
 
 public:
 
@@ -116,8 +116,7 @@ public:
 		std::optional<sol::table> ret{ std::nullopt };
 		if (this->task_modified_)
 		{
-			sol::table tab = this->vm_[TASKS_CACHE];
-			ret.emplace(std::move(tab));
+			ret.emplace(this->vm_[TASKS_CACHE].get<sol::table>());
 			this->task_modified_ = false;
 		}
 		return ret;
@@ -128,8 +127,7 @@ public:
 		std::lock_guard guard{ this->lock_ };
 		std::optional<sol::table> ret{ std::nullopt };
 		if (this->log_modified_) {
-			sol::table tab = this->vm_[LOGS_CACHE];
-			ret.emplace(std::move(tab));
+			ret.emplace(this->vm_[LOGS_CACHE].get<sol::table>());
 			this->log_modified_ = false;
 		}
 		return ret;
@@ -218,26 +216,26 @@ public:
 		return this;
 	}
 
-	virtual iSketcher* draw_frame() noexcept
+	virtual iSketcher* draw_ui() noexcept
 	{
+		std::lock_guard guard{ this->lock_ };
+		this->vm_.stop_gc();
 		if (this->draw_)
 		{
-			cleardevice();
-			BeginBatchDraw();
-
 			// draw log at first 
 			if (this->log_)
-				auto placeholder_1 = this->vm_["Rscript"]["ShowLog"].call();
+				auto placeholder_1 = this->vm_["Rscript"]["ShowLog"].call().valid();
 
-			auto placeholder_2 = this->vm_["Rscript"]["StepRender"].call();
-			EndBatchDraw();
+			auto placeholder_2 = this->vm_["Rscript"]["StepRender"].call().valid();
 		}
+		this->vm_.restart_gc();
 		return this;
 	}
 
 	// unsafe
 	virtual iSketcher* clear_task() noexcept
 	{
+		std::lock_guard guaard{ this->lock_ };
 		this->vm_["Rscript"]["ClearTask"].call();
 		return this;
 	}
@@ -245,6 +243,7 @@ public:
 	// unsafe
 	virtual iSketcher* clear_object() noexcept
 	{
+		std::lock_guard guaard{ this->lock_ };
 		this->vm_["Rscript"]["ClearObject"].call();
 		return this;
 	}
@@ -257,9 +256,10 @@ public:
 		return this;
 	}
 
-	// upload new log
+	// upload new log, no lock needed 
 	virtual iSketcher* upload(sol::table logs) noexcept
 	{
+		// no lock needed
 		this->vm_["Rscript"]["UploadLog"].call(logs);
 		logs.clear();
 		return this;
@@ -268,6 +268,7 @@ public:
 	// update new render task
 	virtual iSketcher* update(sol::table tasks) noexcept
 	{
+		// no lock needed 
 		this->vm_["Rscript"]["UpdateTask"].call(tasks);
 		tasks.clear();
 		return this;

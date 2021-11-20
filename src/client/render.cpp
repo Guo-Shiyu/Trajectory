@@ -32,7 +32,6 @@ Render* Render::ensure() noexcept
 
 Render* Render::start() noexcept
 {
-	this->cacher()->submit("OpenAnimation");
 	this->eloop_ = new std::thread(
 		[this]()
 		{
@@ -41,11 +40,23 @@ Render* Render::start() noexcept
 			// int cx = GetSystemMetrics(SM_CXSCREEN),  cy = GetSystemMetrics(SM_CYSCREEN);
 			int fps = screen["Fps"];
 			int expect = 1000 / fps;
+
 			initgraph(width, hight, SHOWCONSOLE);
 			while (true)
 			{
+				// ----------------------------------------------- render begin
 				auto srt = std::chrono::steady_clock::now();
-				this->sktcher()->draw_frame();
+				BeginBatchDraw();
+				cleardevice();
+
+				this->sktcher()->draw_ui();
+				
+				// draw back round 
+				// if (this->backrd() != nullptr)
+				//	backrd()->display_by(std::nullopt, foucus_x(), foucus_y());
+
+				EndBatchDraw();
+				// ----------------------------------------------- render end 
 
 				// check new animation
 				if (auto ani = this->cacher()->animations(); ani.has_value())
@@ -55,18 +66,14 @@ Render* Render::start() noexcept
 				if (auto log = this->cacher()->logs(); log.has_value())
 					this->sktcher()->upload(log.value());
 
-				// draw back round 
-				if (this->backrd() != nullptr)
-					backrd()->display_by(std::nullopt, focusx(), focusy());
-
 				// increase frame counter 
 				frame_++;
 
-				// time the frame 
+				// timing the frame 
 				auto cost = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - srt).count();
 				if (frame_ % 20 == 0)
 				{
-					// log fps every 0.2s(default) 
+					// flush fps flag every 0.2s(default) 
 					auto realfps = cost < 10 ? fps : 1000 / cost;
 					this->cacher()->refresh(ThreadId::C, std::to_string(realfps));
 				}
@@ -82,10 +89,8 @@ Render* Render::start() noexcept
 
 Render* Render::panic() noexcept
 {
-
 	this->sktcher()->stop(); //->clear_object()->clear_task();
 	this->cacher()->clear();
-
 	closegraph();
 	return this;
 }

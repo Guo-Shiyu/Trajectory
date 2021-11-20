@@ -13,7 +13,7 @@ class iRender : public WorkThread<std::nullptr_t, std::thread>, public iLua
 protected:
     iSketcher*  skter_;
     iCache*     cache_;
-    BackRound*  back_;      // init in state 'pickroom-off'
+    BackRound*  back_;      // init in state 'pickroom-off' // TODO put it into GameInfoClass 
     int         fcsx_, fcsy_; // scope foucus point 
     iRender() : WorkThread(), skter_(nullptr), cache_(nullptr), back_(nullptr), fcsx_(0), fcsy_(0) {}
 
@@ -29,8 +29,8 @@ public:
         fcsy_ = y.value_or(fcsy_);
         return this;
     }
-    int         focusx() const noexcept { return fcsx_; }
-    int         focusy() const noexcept { return fcsy_; }
+    int         foucus_x() const noexcept { return fcsx_; }
+    int         foucus_y() const noexcept { return fcsy_; }
 };
 
 class Render : public iRender

@@ -20,21 +20,14 @@ namespace state
 
         void Prepare::on(Client *c)
         {
-            // check initialize work and fix invalid data 
+            // check initialize work and fix invalid data  
             c->ensure();
-
-#ifdef _DEBUG
-            auto net = c->netio()->state();
-            auto uio = c->uio()->state();
-            clog("check success, net state:{}, userio state:{}",
-                 net->get_curent()->as_str(), uio->get_curent()->as_str());
-#endif // _DEBUG
-
             c->state()->into(state::client::SignIn::instance());
         }
 
         void Prepare::off(Client *c)
         {
+            // start client program 
             c->start();
         }
 
@@ -44,60 +37,82 @@ namespace state
             // show sign in ani 
             c->render()->cacher()->submit("IntoSignIn");
             Sleep(1000 * 5);
-
+            
+            // show main menu 
             c->render()->cacher()->submit("MainMenu");
+            
+            // make space usable 
+            c->uio()->state()->into(state::uio::SignIn::instance());
         }
 
         void SignIn::on(Client *c)
         {
-            Sleep(300);
             // TODO: draw some animation in main menu
-            // The Sliver Tree 
+            // The Sliver Tree [ i want it£¡ ]
+            
+            // sleep some time to decrease cpu waste in state machine loop of client  
+            Sleep(200);
         }
 
         void SignIn::off(Client *c)
         {
-            // report self infomation 
+            // report self infomation to loginserver
             Dispatcher::dispatch(ThreadId::N, "SayHello", std::nullopt);
 
-            // flush 
+            // flush screen 
             c->render()->clear();
         }
 
         IMPL_STATE(PickRoom)
         void PickRoom::into(Client *c)
         {
-            Dispatcher::dispatch(ThreadId::N, "RequestRooms", std::nullopt);
+            // switch keyboard-map 
             c->uio()->state()->into(state::uio::PickRoom::instance());
         }   
 
         void PickRoom::on(Client *c)
         {
-            // request room data every two second 
-            Sleep(2 * 1000);
+            // request room data by polling
             Dispatcher::dispatch(ThreadId::N, "RequestRooms", std::nullopt);
+            Sleep(2 * 1000);
         }
 
         void PickRoom::off(Client *c)
         {
-
+            // flush screen 
+            c->render()->clear();
         }
 
         IMPL_STATE(InRoom)
         void InRoom::into(Client *c)
         {
-
-        
+            // self's room info has been recorded in configer()["RoomInfo"] during RPC process 
+            
+            // make 'space' key (start game) usable
+            UserIO::PickRoomMap.insert_or_assign(' ', []()
+                {
+                    std::cout << "ohhhhh$^@#$%^&*" << std::endl;
+                    std::terminate();
+                    // change state into Battle
+                    Client::instance()->state()->into(state::client::Battle::instance());
+                });
         }
 
         void InRoom::on(Client* c)
-        {
-
+        { 
+            static size_t counter = 0;
+          /*  
+            switch (counter % )
+            {
+            default:
+                break;
+            }*/
         }
 
         void InRoom::off(Client* c)
         {
-
+            // remove key 'space' 
+            UserIO::PickRoomMap.erase(' ');
         }
 
         IMPL_STATE(Battle)
@@ -181,7 +196,6 @@ namespace state
             //static size_t counter{ 0 };
             //constexpr size_t sleeptime{ 1000 }, maxoffline{ 15 };   // 15s 
 
-
             //Sleep(sleeptime);
             //if (counter++ == maxoffline)
             //{
@@ -243,7 +257,7 @@ namespace state
                     Protocol::response(Protocol::MsgFrom::BattleServer, pack);
             };
 
-            // start net thread
+            // start net thread without blocking
             cli->start(false);
         }
 
@@ -254,12 +268,13 @@ namespace state
 
         void ToLoginServ::off(iNetIO *n)
         {
-
+            // unused fn
         }
 
         IMPL_STATE(ToBattleServ)
         void ToBattleServ::into(iNetIO *n)
         {
+
         }
 
         void ToBattleServ::on(iNetIO *n)
@@ -278,15 +293,12 @@ namespace state
 
         void SignIn::into(iUserIO *u)
         {
-            u->set_mapper([&map = UserIO::SignInMap](const char key) noexcept {
-                if (map.contains(key))
-                    map[key]();
-            });
+            u->set_mapper(&UserIO::SignInMap);
         }
 
         void SignIn::on(iUserIO *u)
         {
-            // unused fn
+            // unused
         }
 
         void SignIn::off(iUserIO *u)
@@ -296,11 +308,7 @@ namespace state
         IMPL_STATE(PickRoom)
         void PickRoom::into(iUserIO *u)
         {
-            u->set_mapper([&map = UserIO::PickRoomMap](const char key) noexcept {
-                if (map.contains(key))
-                    map[key]();
-            });
-            Dispatcher::dispatch(ThreadId::N, "SayHello", std::nullopt);
+            u->set_mapper(&UserIO::PickRoomMap);
         }
 
         void PickRoom::on(iUserIO *u)

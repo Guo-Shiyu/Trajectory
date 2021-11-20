@@ -6,9 +6,11 @@ local module = {
     StepRender = function ()
         if #TaskQue > 0 then 
             for k, v in pairs(TaskQue) do
-                coroutine.resume(v)
-                if coroutine.status(v) == "dead" then 
-                    table.remove(TaskQue, k)
+                if type(v) == "thread" then
+                    coroutine.resume(v)
+                    if coroutine.status(v) == "dead" then 
+                        TaskQue[k] = nil
+                    end
                 end
             end
         end
@@ -47,6 +49,7 @@ local module = {
     end,
 
     ClearTask = function ()
+        TaskQue = {} 
         print("lua: ClearTask called")
     end,
 
@@ -63,10 +66,9 @@ local module = {
     end,
 
     UpdateTask = function (queue)
-        for k, v in ipairs(queue) do 
-            -- print("Key: "..tostring(k).." Value: "..type(v));
+        for k, v in ipairs(queue) do
             table.insert(TaskQue, v)
-            --table.remove(queue, k) -- clear taskque in cache by cpp
+            -- clear taskque in cache by cpp
         end
         -- print("lua: UpdateTask called")
         -- print("Cache's TaskQue len: "..#queue)

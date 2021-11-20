@@ -6,7 +6,6 @@ UserIO* UserIO::lazy_init() noexcept
 {
 	this->eloop_ = new hv::EventLoopThread();
 	this->state_ = new SelfState(this);
-	this->state_->into(state::uio::SignIn::instance());
 	return this;
 }
 
@@ -25,7 +24,9 @@ UserIO* UserIO::start() noexcept
 				if (exmsg.message == WM_CHAR)
 				{
 					Dispatcher::dispatch(ThreadId::R, "InputLog", ArgsPackBuilder::create(exmsg));
-					this->mapper_(toascii(exmsg.vkcode));
+					auto key = toascii(exmsg.vkcode);
+					if (this->mapper_->contains(key))
+						this->mapper_->at(key)();
 				}
 		});
 	this->eloop_->start();
