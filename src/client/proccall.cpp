@@ -31,7 +31,7 @@ std::unordered_map<ThreadId, CallMap> Dispatcher::LpcMap =
 			{
 				"SayHello", [](std::optional<ArgsPack> pack)
 				{
-					assert(NetIO::instance()->state()->in_state(state::net::ToLoginServ::instance()));
+					assert(NetIO::instance()->State->in_state(state::net::ToLoginServ::instance()));
 					static json hloapdx{};	// appendix of 'Hello' json  
 					static std::once_flag flag{};
 
@@ -62,7 +62,7 @@ std::unordered_map<ThreadId, CallMap> Dispatcher::LpcMap =
 			{
 				"RequestRooms", [](std::optional<ArgsPack> pack)
 				{
-					assert(NetIO::instance()->state()->in_state(state::net::ToLoginServ::instance()));
+					assert(NetIO::instance()->State->in_state(state::net::ToLoginServ::instance()));
 					
 					NetIO::instance()
 						->connect()
@@ -77,7 +77,7 @@ std::unordered_map<ThreadId, CallMap> Dispatcher::LpcMap =
 			{
 				"CreateRoom", [](std::optional<ArgsPack> pack)
 				{
-					assert(NetIO::instance()->state()->in_state(state::net::ToLoginServ::instance()));
+					assert(NetIO::instance()->State->in_state(state::net::ToLoginServ::instance()));
 					
 					// rd: room desctiptor, require two field: "Name", "Area"
 					json rd = std::any_cast<json>(pack.value()->args_pack().front());
@@ -96,7 +96,7 @@ std::unordered_map<ThreadId, CallMap> Dispatcher::LpcMap =
 			{
 				"JoinRoom", [](std::optional<ArgsPack> pack)
 				{
-					assert(NetIO::instance()->state()->in_state(state::net::ToLoginServ::instance()));
+					assert(NetIO::instance()->State->in_state(state::net::ToLoginServ::instance()));
 
 					int id = std::any_cast<int>(pack.value()->args_pack().front());
 					json apdx; apdx["TargetId"] = id;
@@ -119,9 +119,14 @@ std::unordered_map<ThreadId, CallMap> Dispatcher::LpcMap =
 				"Debug", [](std::optional<ArgsPack> pack)
 				{
 					auto arg = std::any_cast<std::string>(pack.value()->args_pack().front());
-					Render::instance()
-						->cacher()
-						->submit("DebugShow", std::move(arg));
+					Render::instance()->submit( RenderLayer::Menu,  "DebugShow", 
+						Sprite::Updator{ [](auto sprite, auto _)
+						{
+							static size_t counter = 0;
+							if (counter++ % 500 == 0) // continue 5s
+								sprite->Age = Sprite::Forever;
+						} },
+						std::move(arg));
 				}
 			},
 
@@ -129,9 +134,7 @@ std::unordered_map<ThreadId, CallMap> Dispatcher::LpcMap =
 				"InputLog", [](std::optional<ArgsPack> pack)
 				{
 					auto exmsg = std::any_cast<ExMessage>(pack.value()->args_pack().front());
-					Render::instance()
-						->cacher()
-						->refresh(ThreadId::U, as_str(exmsg.vkcode));
+					Render::instance()->refresh(ThreadId::U, as_str(exmsg.vkcode));
 				}
 			},
 
@@ -139,18 +142,14 @@ std::unordered_map<ThreadId, CallMap> Dispatcher::LpcMap =
 				"NetLog", [](std::optional<ArgsPack> pack)
 				{
 					auto log = std::any_cast<std::string>(pack.value()->args_pack().front());
-					Render::instance()
-						->cacher()
-						->refresh(ThreadId::N, std::move(log));
+					Render::instance()->refresh(ThreadId::N, std::move(log));
 				}
 			},
 
 			{
 				"OfflineAlert", [](std::optional<ArgsPack> pack)
 				{
-					Render::instance()
-						->cacher()
-						->refresh(ThreadId::N, "Can not connect to server, please check internet connection");
+					Render::instance()->refresh(ThreadId::N, "Can not connect to server, please check internet connection");
 				}
 			},
 			
@@ -173,9 +172,7 @@ std::unordered_map<ThreadId, CallMap> Dispatcher::LpcMap =
 					}
 
 					Render::instance()
-						->clear()
-						->cacher()
-						->submit("DisplayRoomList", std::move(rmarray), roomcount)
+						//->clear()->submit("DisplayRoomList", std::move(rmarray), roomcount)
 						->refresh(ThreadId::N, roomlist.dump());
 				}
 			},
@@ -189,8 +186,7 @@ std::unordered_map<ThreadId, CallMap> Dispatcher::LpcMap =
 					{
 						std::string reason = result["Reason"].get<std::string>();
 						Render::instance()
-							->cacher()
-							->refresh(ThreadId::N, std::format("Can not create new room, reason: {}", reason));
+	->refresh(ThreadId::N, std::format("Can not create new room, reason: {}", reason));
 					}
 					std::cout << "Create Room result: " << result.dump() << std::endl;
 				}
@@ -256,7 +252,7 @@ Protocol::NetMsgResponser Protocol::LoginRpcMap =
 						Dispatcher::dispatch(ThreadId::C, "RegistRoomInfo", ArgsPackBuilder::create(ret["RoomInfo"]));
 						
 						// change state
-						Client::instance()->state()->into(state::client::InRoom::instance());
+						Client::instance()->State->into(state::client::InRoom::instance());
 					}
 
 					// else: stay in pick room state, do nothing   
@@ -267,14 +263,12 @@ Protocol::NetMsgResponser Protocol::LoginRpcMap =
 				"JoinRoom", [](const json& packet)
 				{
 					const auto& ret = packet["Appendix"];
-					Render::instance()
-						->cacher()
-						->refresh(ThreadId::N, std::format("Join room reply: {}", ret.dump()));
+					Render::instance()->refresh(ThreadId::N, std::format("Join room reply: {}", ret.dump()));
 					// notify render show room list 
 					//Dispatcher::dispatch(ThreadId::R, "DisplayJoinResult", ArgsPackBuilder::create(ret));
 					//
 					//if (ret["Result"].get<bool>()) {	// success 
-					//	Client::instance()->state()->into(state::client::InRoom::instance());
+					//	Client::instance()->State->into(state::client::InRoom::instance());
 					//}
 					// else: stay in pick room state  
 				}

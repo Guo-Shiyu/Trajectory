@@ -5,13 +5,12 @@
 local module = {
     RenderEnsure = function ()
         print("lua: render ensure called")
-        print("Type of Notify is:")
+        print("Type of Notify is:", type(Notify))
     end,
 
     UioEnsure = function ()
         print("lua: UioEnsure called")
     end
-    
 }
 
 return module

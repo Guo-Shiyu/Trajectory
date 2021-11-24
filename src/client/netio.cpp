@@ -3,8 +3,8 @@ SINGLETON_IMPL(NetIO)
 
 NetIO *NetIO::lazy_init() noexcept
 {
-    this->state_ = new SelfState(this);
-    this->state_->set_current(state::net::ToLoginServ::instance());
+    this->State = new SelfState(this);
+    this->State->set_current(state::net::ToLoginServ::instance());
     this->conn_ = new hv::TcpClient();
     return this;
 }
@@ -16,8 +16,8 @@ NetIO *NetIO::ensure() noexcept
 
 NetIO *NetIO::start() noexcept
 {
-    this->state_->into(state::net::ToLoginServ::instance());
-    this->state_->execute();
+    this->State->into(state::net::ToLoginServ::instance());
+    this->State->execute();
     return this;
 }
 NetIO *NetIO::panic() noexcept

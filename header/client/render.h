@@ -1,55 +1,66 @@
 #pragma once
 
 #include "ithreads.h"
-#include "iluavm.h"
-#include "sketcher.h"
-#include "backround.h"
+#include "sprite.h"
 
 #include <thread>
 #include <string_view>
 
-class iRender : public WorkThread<std::nullptr_t, std::thread>, public iLua
+class iRender : public WorkThread<std::nullptr_t, std::thread>, public iRenderAssembly
 {
-protected:
-    iSketcher*  skter_;
-    iCache*     cache_;
-    BackRound*  back_;      // init in state 'pickroom-off' // TODO put it into GameInfoClass 
-    int         fcsx_, fcsy_; // scope foucus point 
-    iRender() : WorkThread(), skter_(nullptr), cache_(nullptr), back_(nullptr), fcsx_(0), fcsy_(0) {}
+public:
+	iScene*		Scene;
+	int         Fx, Fy;		// scope foucus point 
+	size_t      Frame;		// frame counter 
 
 public:
-    iSketcher*  sktcher() const noexcept { return this->skter_; }
-    iCache*     cacher() const noexcept { return this->cache_; }
-    iRender*    clear() noexcept { this->cache_->clear(), this->skter_->clear_all(); return this; }
-    BackRound*  backrd() const noexcept { return this->back_; }
-    iRender*    set_backround(BackRound* backrdptr) noexcept { this->back_ = backrdptr; return this; }
-    iRender*    foucus_on(std::optional<int> x = std::nullopt, std::optional<int> y = std::nullopt) noexcept 
-    {
-        fcsx_ = x.value_or(fcsx_);
-        fcsy_ = y.value_or(fcsy_);
-        return this;
-    }
-    int         foucus_x() const noexcept { return fcsx_; }
-    int         foucus_y() const noexcept { return fcsy_; }
+	iRender() : WorkThread(), iRenderAssembly(), Scene(nullptr), Fx(0), Fy(0), Frame(0) {}
+	
+	//clear all render layer
+	virtual iRender* clear_all() noexcept = 0;
+
+	// clear designed render layer 
+	virtual iRender* clear(RenderLayer layer) noexcept = 0;
+	
+	// refresh instant(developer) log
+	virtual iRender* refresh(ThreadId id, DevLogBuf&& newlog) noexcept = 0;
+	
+	// recorrect foucus point 
+	virtual iRender* foucus(std::optional<int> x = std::nullopt, std::optional<int> y = std::nullopt) noexcept = 0;
+
+	// place new sprite on a layer  
+	template <typename... Args>
+	iRender* submit(RenderLayer layer, std::string_view index, Sprite::Updator&& updator = [](auto, auto) {}, Args&&... args) noexcept
+	{
+		this->Scene->new_sprite(layer, Sprite(this->Frame, Sprite::magic(index, layer, args...), updator));
+		return this;
+	}
 };
 
 class Render : public iRender
 {
-    SINGLETON_DECL(Render)
-private:
-    std::atomic_uint64_t frame_; // frame counter
+	SINGLETON_DECL(Render)
+private: 
+	DevelopLogger *cli_, *net_, *user_;
+
+	void show_devlog() noexcept;
 
 public:
-    Render() : iRender(), frame_(0U) {}
+	Render() : iRender(), cli_(nullptr), net_(nullptr), user_(nullptr) {}
 
-    // init interface
-    Render *lazy_init() noexcept override final;
-    //void    destory() noexcept override final;
+	// init interface
+	Render* lazy_init() noexcept override final;
 
-    // condig interface
-    Render *ensure() noexcept override final;
+	// condig interface
+	Render* ensure() noexcept override final;
 
-    // work thread interface
-    Render *start() noexcept override final;
-    Render *panic() noexcept override final;
-};
+	// work thread interface
+	Render* start() noexcept override final;
+	Render* panic() noexcept override final;
+
+	// iRender interface 
+	Render* clear(RenderLayer layer) noexcept override;
+	Render* clear_all() noexcept override; 
+	Render* foucus(std::optional<int> x = std::nullopt, std::optional<int> y = std::nullopt) noexcept override;
+	Render* refresh(ThreadId id, DevLogBuf&& newlog) noexcept override;
+}; 

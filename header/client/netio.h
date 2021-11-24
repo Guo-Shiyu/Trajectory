@@ -104,7 +104,7 @@ enum class MsgFrom
 	LoginServer, BattleServer
 };
 
-static void response(MsgFrom where, const string& pack)
+static void response(MsgFrom where, const std::string& pack)
 {
 	json packet = json::parse(pack);
 	switch (where)

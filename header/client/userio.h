@@ -1,5 +1,4 @@
 #pragma once
-
 #include "../hv/EventLoopThread.h"
 
 #include "states.h"
@@ -8,24 +7,16 @@
 #include <graphics.h>
 #include <unordered_map>
 
-using KeyMap = std::unordered_map<char, std::function<void()>>;
-
 class iUserIO : public WorkThread<StateMachine<iUserIO>, hv::EventLoopThread>
 {
-protected:
-    KeyMap* mapper_;
 public:
-    iUserIO() : WorkThread(), mapper_(nullptr) {}
-    iUserIO* set_mapper(decltype(mapper_) mapper)
-    {
-        this->mapper_ = mapper;
-        return this;
-    }
+    using KeyMap = std::unordered_map<char, std::function<void()>>;
 
-    const decltype(mapper_) kmapper() noexcept 
-    {
-        return this->mapper_;
-    }
+public:
+    KeyMap* Mapper;
+
+public:
+    iUserIO() : WorkThread(), Mapper(nullptr) {}
 
     virtual iUserIO *pause() noexcept
     {
@@ -45,7 +36,6 @@ public:
 class UserIO : public iUserIO
 {
     SINGLETON_DECL(UserIO);
-
 public:
     UserIO() = default;
     ~UserIO() = default;

@@ -5,13 +5,15 @@
 #include <optional>
 #include <mutex>
 #include <filesystem>
+#include <graphics.h>
 
 #undef max
 #include "../sol/config.hpp"
 #include "../sol/forward.hpp"
 #include "../sol/sol.hpp"
 
-#include "../hv/hstring.h"
+//#include "../hv/hstring.h"
+
 
 class iLua
 {
@@ -66,8 +68,10 @@ static void load_all_mod(sol::state *lua, const std::filesystem::path& directory
     for (auto &it : std::filesystem::directory_iterator{directory})
     {   
         auto path = it.path();
-        auto modname = /*hv::*/filename(path.filename().string());
+        auto modname = path.filename().string();
+		modname.erase(modname.begin() + modname.find('.'), modname.end());
         modname[0] = std::toupper(modname[0]);
         lua->require_file(modname, path.string());
+        std::cout << "\t- Has Load Resource:" << modname << "\tIn Path: " << path.string() << std::endl;
     }
 }

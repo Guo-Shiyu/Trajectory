@@ -22,7 +22,7 @@ namespace state
         {
             // check initialize work and fix invalid data  
             c->ensure();
-            c->state()->into(state::client::SignIn::instance());
+            c->State->into(state::client::SignIn::instance());
         }
 
         void Prepare::off(Client *c)
@@ -35,20 +35,21 @@ namespace state
         void SignIn::into(Client *c)
         {
             // show sign in ani 
-            c->render()->cacher()->submit("IntoSignIn");
+            c->Render->submit(RenderLayer::Object, "IntoSignIn");
             Sleep(1000 * 5);
+            c->Render->clear(RenderLayer::Object);
             
             // show main menu 
-            c->render()->cacher()->submit("MainMenu");
+            c->Render->submit(RenderLayer::Menu, "MainMenu");
             
             // make space usable 
-            c->uio()->state()->into(state::uio::SignIn::instance());
+            c->Userio->State->into(state::uio::SignIn::instance());
         }
 
         void SignIn::on(Client *c)
         {
             // TODO: draw some animation in main menu
-            // The Sliver Tree [ i want it£¡ ]
+            // The Sliver Tree [ i want itï¿½ï¿½ ]
             
             // sleep some time to decrease cpu waste in state machine loop of client  
             Sleep(200);
@@ -60,14 +61,14 @@ namespace state
             Dispatcher::dispatch(ThreadId::N, "SayHello", std::nullopt);
 
             // flush screen 
-            c->render()->clear();
+            c->Render->clear(RenderLayer::Menu);
         }
 
         IMPL_STATE(PickRoom)
         void PickRoom::into(Client *c)
         {
             // switch keyboard-map 
-            c->uio()->state()->into(state::uio::PickRoom::instance());
+            c->Userio->State->into(state::uio::PickRoom::instance());
         }   
 
         void PickRoom::on(Client *c)
@@ -80,7 +81,7 @@ namespace state
         void PickRoom::off(Client *c)
         {
             // flush screen 
-            c->render()->clear();
+            c->Render->clear(RenderLayer::Menu);
         }
 
         IMPL_STATE(InRoom)
@@ -94,7 +95,7 @@ namespace state
                     std::cout << "ohhhhh$^@#$%^&*" << std::endl;
                     std::terminate();
                     // change state into Battle
-                    Client::instance()->state()->into(state::client::Battle::instance());
+                    Client::instance()->State->into(state::client::Battle::instance());
                 });
         }
 
@@ -190,7 +191,7 @@ namespace state
         void Offline::on(iNetIO *n)
         {
             if (n->connect()->channel->isConnected())
-                n->state()->into(state::net::ToLoginServ::instance());
+                n->State->into(state::net::ToLoginServ::instance());
 
             // offline timer 
             //static size_t counter{ 0 };
@@ -200,7 +201,7 @@ namespace state
             //if (counter++ == maxoffline)
             //{
             //    clog("too long without net, process has terminated. (not an error)");
-            //    Client::instance()->state()->into(state::client::Wrong::instance());
+            //    Client::instance()->State->into(state::client::Wrong::instance());
             //}
         }
 
@@ -233,7 +234,7 @@ namespace state
                     info = std::format("disconnected to {}, connfd:{}\n", peeraddr.c_str(), channel->fd());
 
                     // change state into offline state 
-                    n->state()->into(state::net::Offline::instance());
+                    n->State->into(state::net::Offline::instance());
                 }
             
 #ifdef _DEBUG
@@ -251,7 +252,7 @@ namespace state
                 Dispatcher::dispatch(ThreadId::R, "NetLog", ArgsPackBuilder::create(pack));
 #endif // _DEBUG
 
-                if (n->state()->in_state(state::net::ToLoginServ::instance()))
+                if (n->State->in_state(state::net::ToLoginServ::instance()))
                     Protocol::response(Protocol::MsgFrom::LoginServer, pack);
                 else
                     Protocol::response(Protocol::MsgFrom::BattleServer, pack);
@@ -293,7 +294,7 @@ namespace state
 
         void SignIn::into(iUserIO *u)
         {
-            u->set_mapper(&UserIO::SignInMap);
+            u->Mapper = &UserIO::SignInMap;
         }
 
         void SignIn::on(iUserIO *u)
@@ -308,7 +309,7 @@ namespace state
         IMPL_STATE(PickRoom)
         void PickRoom::into(iUserIO *u)
         {
-            u->set_mapper(&UserIO::PickRoomMap);
+            u->Mapper = &UserIO::PickRoomMap;
         }
 
         void PickRoom::on(iUserIO *u)

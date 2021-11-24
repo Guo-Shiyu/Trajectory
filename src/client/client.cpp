@@ -1,8 +1,6 @@
 #include "../../header/hv/hstring.h"
 #include "../../header/client/client.h"
 
-#include <sstream>
-
 void Client::prepare_for_light()
 {
     // get runtime dir
@@ -18,82 +16,86 @@ void Client::prepare_for_light()
     project = project.parent_path();
 
     // load resource file
+    clog("Start Load Resource For Configer");
     load_all_mod(&Client::configer(), project.concat("\\resource\\script"));
 } 
 
 void Client::shine() noexcept
 {
-    this->state_->into(state::client::Prepare::instance());
+    this->State->into(state::client::Prepare::instance());
     try
     {
-        while (not this->state_->in_state(state::client::Wrong::instance()))
+        while (not this->State->in_state(state::client::Wrong::instance()))
         {
             // step each state machine indivaully
-            this->state_->execute();
-            this->uio_->state()->execute();
-            this->net_->state()->execute();
+            this->State->execute();
+            this->Userio->State->execute();
+            this->Net->State->execute();
         }
     }
     catch (const std::exception &e)
     {
         clog("catch std::exception:{}", e.what());
-        this->state_->into(state::client::Wrong::instance());
+        this->State->into(state::client::Wrong::instance());
     }
 
     // program goes wrong, execute wrong state
-    this->state_->execute();
+    this->State->execute();
 }
 
 Client *Client::lazy_init() noexcept
 {
-    this->state_ = new StateMachine<Client>(this);
-    this->game_ = new GameInfo();       // but GameInfo init in state 'InRoom'
-    this->render_ = Render::instance();
-    this->render_->lazy_init();
-    this->net_ = NetIO::instance();
-    this->net_->lazy_init();
-    this->uio_ = UserIO::instance();
-    this->uio_->lazy_init();
-    this->vm_.open_libraries(sol::lib::base, sol::lib::string, sol::lib::package, sol::lib::table, sol::lib::io);
-    load_all_mod(&this->vm_, std::filesystem::path{configer()["Config"]["Client"]["ResourcePath"].get<std::string>()}.concat("\\script"));
+    this->State = new StateMachine<Client>(this); 
+    this->GameCore = new GameInfo();       // but GameInfo inited in state 'InRoom'
+
+    this->Render = Render::instance();
+    this->Net = NetIO::instance();
+    this->Userio = UserIO::instance();
+    
+    this->Render->lazy_init();
+    this->Net->lazy_init();
+    this->Userio->lazy_init();
+    
+    this->vm_.open_libraries(sol::lib::base, sol::lib::string, 
+                             sol::lib::package, sol::lib::table, 
+                             sol::lib::io, sol::lib::math);
+    clog("Start Load Resource For Client's VM");
+    auto resource_path = configer()["Config"]["Client"]["ResourcePath"].get<std::string>();
+    load_all_mod(&this->vm_, std::filesystem::path{resource_path}.concat("\\script"));
     return this;
 }
 
 Client *Client::ensure() noexcept
 {
-    this->render()->ensure();
-    this->netio()->ensure();
-    this->uio()->ensure();
+    this->Render->ensure();
+    this->Net->ensure();
+    this->Userio->ensure();
     return this;
 }
 
 Client *Client::start() noexcept
 {
-    this->netio()->start();
-    this->uio()->start();
-    this->render()->start();
+    this->Net->start();
+    this->Userio->start();
+    this->Render->start();
     return this;
 }
 
 Client *Client::panic() noexcept
 {
-    this->uio()->panic();
-    this->nio()->panic();
-    
-    // stop renderer at last
-    this->render()->panic(); 
+    this->Userio->panic();
+    this->Net->panic();
+    this->Render->panic(); 
     return this;
 }
 
 Client* Client::instance()
 {
     static Client cli{};
-    static std::once_flag oc{};
-    std::call_once(oc, [&]() { cli.lazy_init(); });
     return &cli;
 }
 
 Client *Client::i_say_there_would_be_light()
 {
-    return Client::instance();
+    return Client::instance()->lazy_init();
 }

@@ -4,8 +4,13 @@
 #include "../hv/json.hpp"
 
 using json = nlohmann::json; 
+ 
+class iGameInfo : public iConfig 
+{
+public:
+};
 
-class GameInfo : iConfig 
+class GameInfo : public iGameInfo 
 {
     SINGLETON_DECL(GameInfo)
 private:
@@ -19,7 +24,7 @@ public:
         // reset 
         room_["Player"] = json::array(); 
     }
-    GameInfo* ensure() noexcept 
+    GameInfo* ensure() noexcept override 
     {
         return this;
     }

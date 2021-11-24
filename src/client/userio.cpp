@@ -5,7 +5,7 @@ SINGLETON_IMPL(UserIO)
 UserIO* UserIO::lazy_init() noexcept
 {
 	this->eloop_ = new hv::EventLoopThread();
-	this->state_ = new SelfState(this);
+	this->State = new SelfState(this);
 	return this;
 }
 
@@ -25,8 +25,8 @@ UserIO* UserIO::start() noexcept
 				{
 					Dispatcher::dispatch(ThreadId::R, "InputLog", ArgsPackBuilder::create(exmsg));
 					auto key = toascii(exmsg.vkcode);
-					if (this->mapper_->contains(key))
-						this->mapper_->at(key)();
+					if (this->Mapper->contains(key))
+						this->Mapper->at(key)();
 				}
 		});
 	this->eloop_->start();

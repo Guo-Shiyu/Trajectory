@@ -1,28 +1,28 @@
 #include "../../header/client/client.h"
-
-std::queue<std::string> Logger::cache_{};
+ 
 sol::state iConfig::configer_{};
+sol::state iRenderAssembly::vm_ {};
+std::queue<std::string> Logger::cache_{};
 size_t Protocol::LoginBuilder::req_num_{ 0 };
 
-
-KeyMap UserIO::SignInMap = {
+UserIO::KeyMap UserIO::SignInMap = {
 	// space -> pick room
 	{' ', []()
 		{
-			if (Client::instance()->nio()->state()->in_state(state::net::Offline::instance()))
+			if (Client::instance()->Net->State->in_state(state::net::Offline::instance()))
 				Dispatcher::dispatch(ThreadId::R, "OfflineAlert", std::nullopt);
 			else
-				Client::instance()->state()->into(state::client::PickRoom::instance());
+				Client::instance()->State->into(state::client::PickRoom::instance());
 		}},
 
 	// esc -> exit game
-	{ (char)27, []() {	Client::instance()->state()->into(state::client::Wrong::instance()); }},
+	{ (char)27, []() {	Client::instance()->State->into(state::client::Wrong::instance()); }},
 
-	// tab -> edit self infomation   
+	// TODO: tab -> edit self infomation   
 	// {}
 };
 
-KeyMap UserIO::PickRoomMap = {
+UserIO::KeyMap UserIO::PickRoomMap = {
 	// c -> create a room 
 	{
 		'c', []()

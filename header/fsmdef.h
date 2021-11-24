@@ -255,7 +255,7 @@ class StateMachine {
         this->cur_->on(this->owner_);
     }
 
-    // return previous state
+    // blip into previous state
     void blip() noexcept { this->into(this->pre_); }
 
     // here pointer p must be constructed in singleton pattern

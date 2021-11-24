@@ -27,7 +27,7 @@
     <ClCompile Include="..\src\client\main.cpp" />
     <ClCompile Include="..\src\client\netio.cpp" />
     <ClCompile Include="..\src\client\render.cpp" />
-    <ClCompile Include="..\src\client\sketcher.cpp" />
+    <ClCompile Include="..\src\client\sprite.cpp" />
     <ClCompile Include="..\src\client\states.cpp" />
     <ClCompile Include="..\src\client\static.cpp" />
     <ClCompile Include="..\src\client\userio.cpp" />
@@ -44,6 +44,7 @@
     <ClInclude Include="..\header\client\netio.h" />
     <ClInclude Include="..\header\client\render.h" />
     <ClInclude Include="..\header\client\sketcher.h" />
+    <ClInclude Include="..\header\client\sprite.h" />
     <ClInclude Include="..\header\client\states.h" />
     <ClInclude Include="..\header\client\userio.h" />
     <ClInclude Include="..\header\fsmdef.h" />
@@ -158,6 +159,7 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;HV_STATICLIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpplatest</LanguageStandard>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
