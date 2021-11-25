@@ -123,6 +123,9 @@ public:
 	
 	// update sprites's field 
 	virtual iScene* update(size_t, iGameInfo*) noexcept = 0;
+
+	// draw a frame 
+	virtual iScene* draw_frame() noexcept = 0;
 	
 	// add a new sprite on sesigned layer
 	virtual iScene* new_sprite(RenderLayer layer, Sprite&& sprite) noexcept = 0;
@@ -150,12 +153,14 @@ private:
 
 private:
 	// vistor pattern to travse all sprite, order: obj < active < ui < menu
-	void travse(const std::function<void(LayerView&)>& visitor) noexcept;
+	Scene* travse(const std::function<void(LayerView&)>& visitor) noexcept;
 
 public:
 	Scene() : objects_(), actives_(), uis_(), menus_(), lock_() {}
 
 	Scene* update(size_t frame, iGameInfo* game) noexcept;
+
+	Scene* draw_frame() noexcept;
 
 	Scene* new_sprite(RenderLayer layer, Sprite&& sprite) noexcept;
 

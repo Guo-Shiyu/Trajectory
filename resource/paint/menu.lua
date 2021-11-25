@@ -24,7 +24,30 @@ local module =
             Act.Xyout(0, 30, debuginfo)
             coroutine.yield()
         end
-    end
+    end,
+
+    --- @arg count: rooms count 
+    --- @arg list: table of rooms, 
+    DisplayRoomList = function (count, list)
+        local list, count = list, count 
+        coroutine.yield()
+
+        while true do
+            Set.SetLineColor(0xFFFFFF)  -- white 
+            Set.SetTextStyle(20, 14, "Terminal")
+            if count == 0 then
+                Act.Xyout(580, 250, "( empty room list in server )")
+            else 
+                local count = 0
+                for _, value in pairs(list) do
+                    local str = ""
+                    str = str..tostring(value).."\t"  
+                    Act.Xyout(625, 250 + 30 * count, str)            
+                end
+            end
+            coroutine.yield()
+        end
+    end, 
 
 }
 

@@ -1,10 +1,6 @@
 #pragma once
 
-#include <fstream>
-#include <sstream>
-#include <optional>
 #include <mutex>
-#include <filesystem>
 #include <graphics.h>
 
 #undef max
@@ -53,25 +49,3 @@ public:
 
     virtual ~iConfig(){};
 };
-
-static std::optional<std::string> read_to_string(std::string filename) noexcept
-{
-    std::ifstream in{filename, std::ios::in};
-    if (in.is_open())
-        return std::string((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
-    else
-        return std::nullopt;
-}
-
-static void load_all_mod(sol::state *lua, const std::filesystem::path& directory) noexcept
-{
-    for (auto &it : std::filesystem::directory_iterator{directory})
-    {   
-        auto path = it.path();
-        auto modname = path.filename().string();
-		modname.erase(modname.begin() + modname.find('.'), modname.end());
-        modname[0] = std::toupper(modname[0]);
-        lua->require_file(modname, path.string());
-        std::cout << "\t- Has Load Resource:" << modname << "\tIn Path: " << path.string() << std::endl;
-    }
-}

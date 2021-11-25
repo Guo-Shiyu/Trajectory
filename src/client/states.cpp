@@ -36,7 +36,7 @@ namespace state
         {
             // show sign in ani 
             c->Render->submit(RenderLayer::Object, "IntoSignIn");
-            Sleep(1000 * 5);
+            Sleep(1000 * 3);
             c->Render->clear(RenderLayer::Object);
             
             // show main menu 

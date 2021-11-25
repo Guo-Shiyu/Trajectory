@@ -1,7 +1,3 @@
-#include "../../header/client/ilpc.h"
-#include "../../header/client/netio.h"
-#include "../../header/client/userio.h"
-#include "../../header/client/render.h"
 #include "../../header/client/client.h"
 
 std::unordered_map<ThreadId, CallMap> Dispatcher::LpcMap =
@@ -119,14 +115,17 @@ std::unordered_map<ThreadId, CallMap> Dispatcher::LpcMap =
 				"Debug", [](std::optional<ArgsPack> pack)
 				{
 					auto arg = std::any_cast<std::string>(pack.value()->args_pack().front());
-					Render::instance()->submit( RenderLayer::Menu,  "DebugShow", 
-						Sprite::Updator{ [](auto sprite, auto _)
-						{
-							static size_t counter = 0;
-							if (counter++ % 500 == 0) // continue 5s
-								sprite->Age = Sprite::Forever;
-						} },
-						std::move(arg));
+					Render::instance()
+						->submit( 
+							RenderLayer::Menu,  
+							"DebugShow", 
+							Sprite::Updator{ [](auto sprite, auto _)
+							{
+								static size_t counter = 0;
+								if (counter++ % 500 == 0) // continue 5s
+									sprite->Age = Sprite::Forever;
+							} },
+							std::move(arg));
 				}
 			},
 
@@ -164,15 +163,16 @@ std::unordered_map<ThreadId, CallMap> Dispatcher::LpcMap =
 					for (const auto& rm : roomlist["RoomList"])
 					{
 						sol::table tmp;
+						// field depends on 'Create Room'
 						tmp["Name"] = rm["Name"].get<std::string>();
 						tmp["Area"] = rm["Area"].get<std::string>();
-						// ... others 
 
 						rmarray.add(tmp);
 					}
 
 					Render::instance()
-						//->clear()->submit("DisplayRoomList", std::move(rmarray), roomcount)
+						->clear(RenderLayer::Menu)
+						->submit(RenderLayer::Menu, "DisplayRoomList", [](auto _, auto __) {}, roomcount, std::move(rmarray))
 						->refresh(ThreadId::N, roomlist.dump());
 				}
 			},
@@ -185,8 +185,7 @@ std::unordered_map<ThreadId, CallMap> Dispatcher::LpcMap =
 					if (not result["Result"].get<bool>()) // create room fail
 					{
 						std::string reason = result["Reason"].get<std::string>();
-						Render::instance()
-	->refresh(ThreadId::N, std::format("Can not create new room, reason: {}", reason));
+						Render::instance()->refresh(ThreadId::N, std::format("Can not create new room, reason: {}", reason));
 					}
 					std::cout << "Create Room result: " << result.dump() << std::endl;
 				}
@@ -224,32 +223,30 @@ Protocol::NetMsgResponser Protocol::LoginRpcMap =
 	},
 
 	{
-		"Reply",
+		"Request",
 		{
 			{
 				"Room", [](const json& packet)
 				{
 					// notify render show room list 
-					Dispatcher::dispatch(ThreadId::R, "DisplayRoomList", ArgsPackBuilder::create(packet["Appendix"]));
+					Dispatcher::dispatch(ThreadId::R, "DisplayRoomList", ArgsPackBuilder::create(packet));
 				}
 			},
 		}
 	},
 
 	{
-		"Return",
+		"Order",
 		{
 			{
 				"CreateRoom", [](const json& packet)
 				{
-					const auto& ret = packet["Appendix"];
-					
 					// notify render to show create reasult 
-					Dispatcher::dispatch(ThreadId::R, "DisplayCreateResult", ArgsPackBuilder::create(ret));
+					Dispatcher::dispatch(ThreadId::R, "DisplayCreateResult", ArgsPackBuilder::create(packet));
 					
-					if (ret["Result"].get<bool>()) {	// success 
+					if (packet["Result"].get<bool>()) {	// success 
 						// notify client to record self room info   
-						Dispatcher::dispatch(ThreadId::C, "RegistRoomInfo", ArgsPackBuilder::create(ret["RoomInfo"]));
+						Dispatcher::dispatch(ThreadId::C, "RegistRoomInfo", ArgsPackBuilder::create(packet["RoomInfo"]));
 						
 						// change state
 						Client::instance()->State->into(state::client::InRoom::instance());

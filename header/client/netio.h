@@ -49,7 +49,8 @@ public:
 
 namespace Protocol
 {
-class LoginBuilder
+template<bool IsFromClient>
+class PacketBuilder
 {
 private:
 	json tobuild_;
@@ -57,22 +58,22 @@ private:
 	static size_t req_num_;
 
 public:
-	LoginBuilder() = default;
-	~LoginBuilder() = default;
+	PacketBuilder() = default;
+	~PacketBuilder() = default;
 
-	LoginBuilder& deal_type(std::string_view str) noexcept
+	PacketBuilder& deal_type(std::string_view str) noexcept
 	{
 		this->tobuild_["Type"] = str;
 		return *this;
 	}
 
-	LoginBuilder& deal_subtype(std::string_view str) noexcept
+	PacketBuilder& deal_subtype(std::string_view str) noexcept
 	{
 		this->tobuild_["SubType"] = str;
 		return *this;
 	}
 
-	LoginBuilder& deal_appendix(const json& apd) noexcept
+	PacketBuilder& deal_appendix(const json& apd) noexcept
 	{
 		this->tobuild_["Appendix"] = apd;
 		return *this;
@@ -81,19 +82,22 @@ public:
 	std::string build() noexcept
 	{
 		this->tobuild_["ReqCounter"] = req_num_++;
+		this->tobuild_["FromTag"] = IsFromClient;
 		return this->tobuild_.dump();
 	}
 
-	static LoginBuilder make() noexcept
+	static PacketBuilder make() noexcept
 	{
-		return LoginBuilder();
+		return PacketBuilder();
 	}
-
 };
 
+using LoginBuilder	= PacketBuilder<true>;
+using BtlSevBuilder = PacketBuilder<false>;
+
 using NetMsgHandler = std::function<void(const json&)>;
-using LowerSortMap = std::unordered_map<std::string_view, NetMsgHandler>;
-using UpperSortMap = std::unordered_map<std::string_view, LowerSortMap>;
+using LowerSortMap	= std::unordered_map<std::string_view, NetMsgHandler>;
+using UpperSortMap	= std::unordered_map<std::string_view, LowerSortMap>;
 using NetMsgResponser = UpperSortMap;
 
 // defined in 'proccall.cpp'
@@ -110,7 +114,8 @@ static void response(MsgFrom where, const std::string& pack)
 	switch (where)
 	{
 	case Protocol::MsgFrom::LoginServer:
-		Protocol::LoginRpcMap.at(packet["Type"].get<std::string>()).at(packet["SubType"].get<std::string>())(packet);
+		// dispatch 'Appendix' field to Remote-Process-Map
+		Protocol::LoginRpcMap.at(packet["Type"].get<std::string>()).at(packet["SubType"].get<std::string>())(packet["Appendix"]);
 		break;
 	case Protocol::MsgFrom::BattleServer:
 		break;

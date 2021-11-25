@@ -59,24 +59,25 @@ Render* Render::start() noexcept
 
 			// TODO: show console decided by config file 
 			initgraph(width, hight, SHOWCONSOLE);
+			BeginBatchDraw();
 
 			// render loop 
 			while (true)
 			{
 				cleardevice();
 				auto srt = std::chrono::steady_clock::now();
-				// recorrect foucus point 
-				
+				// TODO:recorrect foucus point 
 
 				// ----------------------------------------------- render begin
-				BeginBatchDraw();
 				
-				// assert(this->Scene != nullptr ), which been inited in 'lazy_init' proc
-				this->Scene->update(Frame, GameInfo::instance());
 
-				show_devlog();
+				this->Scene // assert(this->Scene != nullptr ), which been inited in 'lazy_init' proc
+					->update(Frame, GameInfo::instance())
+					->draw_frame();
 
-				EndBatchDraw();
+				this->show_devlog();
+
+				FlushBatchDraw();
 				// ----------------------------------------------- render end 
 
 				// increase frame counter 
@@ -90,7 +91,7 @@ Render* Render::start() noexcept
 				if (Frame % 20 == 0)
 				{
 					auto realfps = cost < 10 ? fps : 1000 / cost;
-					this->refresh(ThreadId::C, std::to_string(realfps));
+					this->refresh(ThreadId::C, std::format("{:4}", realfps));
 				}
 				
 				// sleep to control FPS 
@@ -141,7 +142,8 @@ Render* Render::refresh(ThreadId id, DevLogBuf&& newlog) noexcept
 		// unreachable code 
 		break;
 	case ThreadId::N:
-		this->net_->update(newlog);
+		auto now = datetime_now();
+		this->net_->update(std::format("[{0:2}:{1:2}:{2:2}] . {3}", now.hour, now.min, now.sec, newlog));
 		break;
 	case ThreadId::U:
 		this->user_->update(newlog);

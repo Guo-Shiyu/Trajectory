@@ -71,34 +71,44 @@ iRenderAssembly* iRenderAssembly::regist_action() noexcept
 //	return this;
 //}
 
-void Scene::travse(const std::function<void(LayerView&)>& visit) noexcept
+Scene* Scene::travse(const std::function<void(LayerView&)>& visit) noexcept
 {
+	std::lock_guard gd{ this->lock_ };
 	// render order 
 	visit(this->objects_);
 	visit(this->actives_);
 	visit(this->uis_);
 	visit(this->menus_);
+	return this;
 }
 
 Scene* Scene::update(size_t frame, iGameInfo* game) noexcept
 {
-	std::lock_guard gd{ this->lock_ };
-
 	// TODO: frenquency control
-	static auto update_and_show = [=](decltype(this->actives_)& container)
+	static auto update = [game](decltype(this->actives_)& container)
 	{
 		for (auto it = container.begin(); it != container.end(); ++it)
 		{
-			it->update(game)->cast();
+			it->update(game);
 
 			// dead sprite's age = std::numberic_limit<size_t>::max();
 			if (it->Age == Sprite::Forever)
-				container.erase(it);
+				container.erase(it), std::cout << "delete one sprite" << std::endl;
 		}
 	};
 
-	this->travse(update_and_show);
-	return this;
+	return this->travse(update);
+}
+
+Scene* Scene::draw_frame() noexcept
+{
+	static auto cast = [](decltype(this->actives_)& container)
+	{
+		for (auto& it : container)
+			it.cast();
+	};
+
+	return this->travse(cast);
 }
 
 Scene* Scene::new_sprite(RenderLayer layer, Sprite&& sprite) noexcept
@@ -127,16 +137,13 @@ Scene* Scene::new_sprite(RenderLayer layer, Sprite&& sprite) noexcept
 Scene* Scene::clear() noexcept
 {
 	static auto clear = [](decltype(this->uis_)& container)
-	{
-		container.clear();
-	};
-
-	this->travse(clear);
-	return this;
+	{	container.clear();	};
+	return this->travse(clear);
 }
 
 Scene* Scene::clear(RenderLayer layer) noexcept
 {
+	std::lock_guard gd{ this->lock_ };
 	switch (layer)
 	{
 	case RenderLayer::Active:
