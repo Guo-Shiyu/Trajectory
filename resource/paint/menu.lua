@@ -49,6 +49,21 @@ local module =
         end
     end, 
 
+    --- @arg info: self room's info as str, 
+    DisplaySelfRoom = function (infostr)
+        local info = infostr 
+        coroutine.yield()
+
+        while true do
+            Set.SetLineColor(0xFFFFFF)  -- white 
+            Set.SetTextStyle(20, 14, "Terminal")
+            
+            Act.Xyout(250, 250, tostring(infostr))
+            
+            coroutine.yield()
+        end
+    end, 
+
 }
 
 return module 

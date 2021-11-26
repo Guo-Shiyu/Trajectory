@@ -25,6 +25,7 @@ void Client::shine() noexcept
     this->State->into(state::client::Prepare::instance());
     try
     {
+        // main game loop 
         while (not this->State->in_state(state::client::Wrong::instance()))
         {
             // step each state machine indivaully

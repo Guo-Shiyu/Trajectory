@@ -8,6 +8,7 @@ using json = nlohmann::json;
 class iGameInfo : public iConfig 
 {
 public:
+    virtual bool is_ready() noexcept = 0;
 };
 
 class GameInfo : public iGameInfo 
@@ -18,12 +19,12 @@ private:
 
 public:
     GameInfo() : room_() {}
-    GameInfo*   fill_roominfo(json&& baseinfo, json&& areainfo) 
+    bool is_ready() noexcept
     {
-
-        // reset 
-        room_["Player"] = json::array(); 
+        // TODO 
+        return true;
     }
+
     GameInfo* ensure() noexcept override 
     {
         return this;

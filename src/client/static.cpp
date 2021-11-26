@@ -6,14 +6,6 @@ std::queue<std::string> Logger::cache_{};
 size_t Protocol::LoginBuilder::req_num_{ 0 };
 
 UserIO::KeyMap UserIO::SignInMap = {
-	// space -> pick room
-	{' ', []()
-		{
-			if (Client::instance()->Net->State->in_state(state::net::Offline::instance()))
-				Dispatcher::dispatch(ThreadId::R, "OfflineAlert", std::nullopt);
-			else
-				Client::instance()->State->into(state::client::PickRoom::instance());
-		}},
 
 	// esc -> exit game
 	{ (char)27, []() {	Client::instance()->State->into(state::client::Wrong::instance()); }},
@@ -28,7 +20,7 @@ UserIO::KeyMap UserIO::PickRoomMap = {
 		'c', []()
 		{
 			// room : json as str 
-			//todo: regist inputbox to luavm
+			// todo: regist inputbox to luavm ? 
 			// std::string rooms =  Client::instance()->configer()["Cmd"]["NewRoom"].call();
 			
 			// TEST DATA 

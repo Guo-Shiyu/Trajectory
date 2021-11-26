@@ -12,8 +12,12 @@ std::unordered_map<ThreadId, CallMap> Dispatcher::LpcMap =
 					// field depend on server reply 
 					json selfrd = std::any_cast<json>(pack.value()->args_pack().front());
 					
-					std::cout << std::format("RegistRoomInfo called, info:{}", selfrd.dump()) << std::endl;
+					auto str = selfrd.dump();
+			std::cout << std::format("RegistRoomInfo called, self's room info:{}", str) << std::endl;
 					// save it in configuration
+					Client::configer().create_named_table("RoomInfo");
+					Client::configer()["RoomInfo"] = Client::configer()["Json"]["decode"].call(std::move(str));
+					
 					// Client::instance()->game_info()->fill_roominfo(std::move(selfrd));
 				}
 			},
@@ -66,6 +70,25 @@ std::unordered_map<ThreadId, CallMap> Dispatcher::LpcMap =
 						->write(Protocol::LoginBuilder::make()
 								.deal_type("Request")
 								.deal_subtype("Room")
+								.build());
+				}
+			},
+
+			{
+				"ReqSelfRoomInfo", [](std::optional<ArgsPack> pack)
+				{
+					assert(NetIO::instance()->State->in_state(state::net::ToLoginServ::instance()));
+
+					json apdx{};
+					apdx["RoomId"] = Client::configer()["RoomInfo"]["Id"].get<int>();
+
+					NetIO::instance()
+						->connect()
+						->channel
+						->write(Protocol::LoginBuilder::make()
+								.deal_type("Request")
+								.deal_subtype("SelfRoom")
+								.deal_appendix(std::move(apdx))
 								.build());
 				}
 			},
@@ -154,8 +177,7 @@ std::unordered_map<ThreadId, CallMap> Dispatcher::LpcMap =
 			
 			{
 				"DisplayRoomList", [](std::optional<ArgsPack> pack)
-				{
-					// roomlist: json 
+				{ 
 					auto roomlist = std::any_cast<json>(pack.value()->args_pack().front());
 					
 					int roomcount = roomlist["Count"];
@@ -174,6 +196,19 @@ std::unordered_map<ThreadId, CallMap> Dispatcher::LpcMap =
 						->clear(RenderLayer::Menu)
 						->submit(RenderLayer::Menu, "DisplayRoomList", [](auto _, auto __) {}, roomcount, std::move(rmarray))
 						->refresh(ThreadId::N, roomlist.dump());
+				}
+			},
+
+			{
+				"DisplaySelfRoom", [](std::optional<ArgsPack> pack)
+				{
+					auto msg = std::any_cast<json>(pack.value()->args_pack().front());
+					auto str = msg.dump();
+
+					Render::instance()
+						->clear(RenderLayer::Menu)
+						->submit(RenderLayer::Menu, "DisplaySelfRoom", [](auto _, auto __) {}, str)	// TODO: change it as a table (json.decode(str))
+						->refresh(ThreadId::N, std::move(str));
 				}
 			},
 
@@ -232,6 +267,14 @@ Protocol::NetMsgResponser Protocol::LoginRpcMap =
 					Dispatcher::dispatch(ThreadId::R, "DisplayRoomList", ArgsPackBuilder::create(packet));
 				}
 			},
+
+			{
+				"SelfRoom", [](const json& packet)
+				{
+					// notify render show room list 
+					Dispatcher::dispatch(ThreadId::R, "DisplaySelfRoom", ArgsPackBuilder::create(packet));
+				}
+			},
 		}
 	},
 
@@ -240,16 +283,18 @@ Protocol::NetMsgResponser Protocol::LoginRpcMap =
 		{
 			{
 				"CreateRoom", [](const json& packet)
-				{
-					// notify render to show create reasult 
-					Dispatcher::dispatch(ThreadId::R, "DisplayCreateResult", ArgsPackBuilder::create(packet));
-					
-					if (packet["Result"].get<bool>()) {	// success 
+				{	
+					if (packet["Result"].get<bool>()) // success 
+					{	 
 						// notify client to record self room info   
 						Dispatcher::dispatch(ThreadId::C, "RegistRoomInfo", ArgsPackBuilder::create(packet["RoomInfo"]));
 						
 						// change state
 						Client::instance()->State->into(state::client::InRoom::instance());
+					}
+					else
+					{
+						Dispatcher::dispatch(ThreadId::R, "CreateRoomFailed", ArgsPackBuilder::create(packet["Reason"]));
 					}
 
 					// else: stay in pick room state, do nothing   
