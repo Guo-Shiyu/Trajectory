@@ -129,6 +129,29 @@ std::unordered_map<ThreadId, CallMap> Dispatcher::LpcMap =
 								.deal_appendix(apdx)
 								.build());
 				}
+			},
+
+			{
+				"ReqResources", [](std::optional<ArgsPack> pack)
+				{
+					assert(NetIO::instance()->State->in_state(state::net::ToLoginServ::instance()));
+					
+					auto req = Protocol::LoginBuilder::make().deal_type("Request");
+					const auto& pre = Client::configer();
+					if (pre["Area"].get_type() == sol::type::nil)
+					{
+						json apdx;
+						apdx["Name"] = pre["RoomInfo"]["Area"].get<std::string>();
+						req.deal_subtype("Area").deal_appendix(apdx);
+					}
+					// TODO: other resources 
+					// else if ()
+
+					NetIO::instance()
+						->connect()
+						->channel
+						->write(req.build());
+				}
 			}
 	}},
 

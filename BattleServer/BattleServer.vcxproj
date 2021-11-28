@@ -19,10 +19,17 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\src\battle\battle.cpp" />
     <ClCompile Include="..\src\battle\main.cpp" />
+    <ClCompile Include="..\src\battle\protocol.cpp" />
+    <ClCompile Include="..\src\battle\static.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\sevcfg.lua" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\header\battle\battle.h" />
+    <ClInclude Include="..\header\battle\protocol.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
@@ -127,14 +134,14 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;_CONSOLE;HV_STATICLIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpplatest</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>D:\GitBranch\GitHub\Trajectory\lib\lua54.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>D:\GitBranch\GitHub\Trajectory\lib\Debug\lua54.lib;D:\GitBranch\GitHub\Trajectory\lib\Debug\hv_static.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <IgnoreSpecificDefaultLibraries>msvcrt.lib;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
     </Link>
   </ItemDefinitionGroup>

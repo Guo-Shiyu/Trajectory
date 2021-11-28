@@ -13,18 +13,13 @@
 #ifdef CASE1
 
 using God = Client;
+#include "../../header/client/backround.h"
 
 [[nodiscard("hiahia")]]
 int main()
 {
-	std::cout << "Hello " << std::endl;
-	God::prepare_for_light();
-	auto light = God::i_say_there_would_be_light();
-	return light->shine();
-}
-
-//
-//initgraph(1540, 952);
+	
+//initgraph(1540, 952, SHOWCONSOLE);
 //BeginBatchDraw();
 //BackRound back(1540, 952);
 //BackRound::Processor testproc = [](BackRound& bits)
@@ -46,7 +41,18 @@ int main()
 //
 //back.process_by(testproc);
 //back.display_by();
+//std::cout << std::endl;
+//std::cout << back.zipped_bitstream() << std::endl;
+//std::cout << std::endl;
 //EndBatchDraw();
+
+
+	std::cout << "Hello " << std::endl;
+	God::prepare_for_light();
+	auto light = God::i_say_there_would_be_light();
+	return light->shine();
+}
+
 
 
 #else
