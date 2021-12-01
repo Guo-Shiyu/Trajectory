@@ -13,7 +13,7 @@ namespace state
 	namespace client
 	{
 		IMPL_STATE(Prepare)
-			void Prepare::into(Client* c)
+		void Prepare::into(Client* c)
 		{
 			// nothing here
 		}
@@ -32,14 +32,15 @@ namespace state
 		}
 
 		IMPL_STATE(SignIn)
-			void SignIn::into(Client* c)
+		void SignIn::into(Client* c)
 		{
 			// change keyboard map
 			c->Userio->State->into(state::uio::SignIn::instance());
 
-			// show sign in ani 
+			// show sign in ani
+			constexpr size_t ani_continue_sec = 3; 
 			c->Render->submit(RenderLayer::Object, "IntoSignIn");
-			Sleep(1000 * 3);
+			Sleep(ani_continue_sec * 1000);
 
 			// make key 'space' usable  
 			c->Userio
@@ -62,7 +63,7 @@ namespace state
 			// The Sliver Tree [ i want it !!! ]
 
 			// sleep some time to decrease cpu waste in state machine loop of client  
-			Sleep(200);
+			Sleep(20);
 		}
 
 		void SignIn::off(Client* c)
@@ -75,7 +76,7 @@ namespace state
 		}
 
 		IMPL_STATE(PickRoom)
-			void PickRoom::into(Client* c)
+		void PickRoom::into(Client* c)
 		{
 			// switch keyboard-map 
 			c->Userio->State->into(state::uio::PickRoom::instance());
@@ -84,8 +85,9 @@ namespace state
 		void PickRoom::on(Client* c)
 		{
 			// request room data by polling
+			constexpr size_t poll_interval = 2;
 			Dispatcher::dispatch(ThreadId::N, "RequestRooms", std::nullopt);
-			Sleep(2 * 1000);
+			Sleep(poll_interval * 1000);
 		}
 
 		void PickRoom::off(Client* c)
@@ -95,7 +97,7 @@ namespace state
 		}
 
 		IMPL_STATE(InRoom)
-			void InRoom::into(Client* c)
+		void InRoom::into(Client* c)
 		{
 			// self's room info has been recorded in configer()["RoomInfo"] during RPC process 
 			
@@ -110,7 +112,6 @@ namespace state
 			constexpr int RRI  = 0.2 * 1000;	// request resources interval
 			constexpr int STAGE_NUM = 5;
 
-
 			switch (counter % (STAGE_NUM + 1))
 			{
 			case 0:	// poll self room info, interval = PSRI + STAGE_NUM * RRI
@@ -124,9 +125,6 @@ namespace state
 					// make 'space' key usable (start game) 
 					UserIO::PickRoomMap.insert_or_assign(' ', []()
 						{
-							// FIXME............. 
-							std::cout << "ohhhhh$^@#$%^&*" << std::endl;
-
 							// change state into Battle
 							Client::instance()->State->into(state::client::Battle::instance());
 						});
@@ -149,45 +147,67 @@ namespace state
 			// remove key 'space' in pickroom map 
 			UserIO::PickRoomMap.erase(' ');  
 
-			// FIXME: new keymap in userio 
+			// pause userio thread 
+			Client::instance()->Userio->pause();
+
+			// netio redirect to battle server 
+			Client::instance()
+				->Net
+				->State
+				->into(state::net::ToBattleServ::instance());
 		}
 
 		IMPL_STATE(Battle)
-			void Battle::into(Client* c)
+		void Battle::into(Client* c)
 		{
-			std::cout << "ohhhhh$^@#$%^&*" << std::endl;
-			Sleep(5 * 1000);
-			std::terminate();
+			// recount 3s to wair server prepared  
+			constexpr size_t wait_seconds = 3U;
+
+			Client::instance()
+				->Render
+				->clear_all()
+				->submit(RenderLayer::Active, "Recounter", [](auto, auto){}, wait_seconds);
+			Sleep(wait_seconds * 1000);
+
+			Client::instance()
+				->Userio
+				->resume()
+				->State
+				->into(state::uio::GatheringPower::instance());
 		}
 
 		void Battle::on(Client* c)
 		{
+			// do nothing 
+			Sleep(100);
 
+			// TODO: possible heartbeat here 
 		}
 
 		void Battle::off(Client* c)
 		{
+			// clear AreaInfo, WeaponInfo 
 
 		}
 
 		IMPL_STATE(Satistic)
-			void Satistic::into(Client* c)
+		void Satistic::into(Client* c)
 		{
-
+			// request statistic infomation 
 		}
 
 		void Satistic::on(Client* c)
 		{
-
+			// do nothing 
 		}
 
 		void Satistic::off(Client* c)
 		{
-
+			// clear Roominfo completely 
 		}
 
 		IMPL_STATE(Wrong)
-			void Wrong::into(Client* c)
+		void Wrong::into(Client* c)
 		{
 			c->panic();
 		}
@@ -204,7 +224,7 @@ namespace state
 		}
 
 		IMPL_STATE(Develop)
-			void Develop::into(Client* c)
+		void Develop::into(Client* c)
 		{
 
 		}
@@ -216,14 +236,14 @@ namespace state
 
 		void Develop::off(Client* c)
 		{
-			// can not put any stmt here because initialize Client logic
+			// do nothing 
 		}
 	}
 
 	namespace net
 	{
 		IMPL_STATE(Offline)
-			void Offline::into(iNetIO* n)
+		void Offline::into(iNetIO* n)
 		{
 			// log and set reconnect every 
 			clog("network wrong, client is offline now");
@@ -253,10 +273,11 @@ namespace state
 
 		void Offline::off(iNetIO* n)
 		{
+			// do nothing 
 		}
 
 		IMPL_STATE(ToLoginServ)
-			void ToLoginServ::into(iNetIO* n)
+		void ToLoginServ::into(iNetIO* n)
 		{
 			clog("Netio into state ToLoginServer");
 
@@ -270,7 +291,8 @@ namespace state
 			assert(connfd >= 0);
 #endif // _DEBUG
 
-			cli->onConnection = [n](const hv::SocketChannelPtr& channel) {
+			cli->onConnection = [n](const hv::SocketChannelPtr& channel) 
+			{
 				std::string peeraddr = channel->peeraddr();
 				std::string info;
 				if (channel->isConnected())
@@ -290,7 +312,8 @@ namespace state
 
 			};
 
-			cli->onMessage = [n](const hv::SocketChannelPtr& channel, hv::Buffer* buf) {
+			cli->onMessage = [n](const hv::SocketChannelPtr& channel, hv::Buffer* buf) 
+			{
 				std::string pack{ static_cast<char*>(buf->data()), buf->size() };
 
 #ifdef _DEBUG
@@ -310,73 +333,112 @@ namespace state
 
 		void ToLoginServ::on(iNetIO* n)
 		{
-			// unused fn
+			// do nothing 
 		}
 
 		void ToLoginServ::off(iNetIO* n)
 		{
-			// unused fn
+			// do nothing 
 		}
 
 		IMPL_STATE(ToBattleServ)
-			void ToBattleServ::into(iNetIO* n)
+		void ToBattleServ::into(iNetIO* n)
 		{
+			// battle server addr has stored in Config->RoomInfo and GameInfo->RoomInfo
+			auto sevaddr = Client::instance()
+										->GameCore
+										->RoomInfo["Sevaddr"].get<std::string>();
+			auto port = n->configer()["Config"]["NetIO"]["BattlePort"].get<int>();
 
+			auto cli = n->connect();
+			cli->stop();
+			int connfd = cli->createsocket(port, sevaddr.c_str());
+
+#ifdef _DEBUG
+			assert(connfd >= 0);
+#endif // _DEBUG
+
+			// cli->onMessage/onConnection/onWriteComplete needn't change 
+			// unblocking start 
+			cli->start(false);
 		}
 
 		void ToBattleServ::on(iNetIO* n)
 		{
+			// do nothing 
 		}
 
 		void ToBattleServ::off(iNetIO* n)
 		{
-
+			// do nothing 
 		}
 	}
 
 	namespace uio
 	{
 		IMPL_STATE(SignIn)
-
-			void SignIn::into(iUserIO* u)
+		void SignIn::into(iUserIO* u)
 		{
 			u->Mapper = &UserIO::SignInMap;
 		}
 
 		void SignIn::on(iUserIO* u)
 		{
-			// unused
+			// do nothing 
 		}
 
 		void SignIn::off(iUserIO* u)
 		{
+			// do nothing 
 		}
 
 		IMPL_STATE(PickRoom)
-			void PickRoom::into(iUserIO* u)
+		void PickRoom::into(iUserIO* u)
 		{
 			u->Mapper = &UserIO::PickRoomMap;
 		}
 
 		void PickRoom::on(iUserIO* u)
 		{
+			// do nothing 
 		}
 
 		void PickRoom::off(iUserIO* u)
 		{
+			// do nothing 
 		}
 
-		IMPL_STATE(OnlyMouse)
-			void OnlyMouse::into(iUserIO* u)
+		IMPL_STATE(InBattle)
+		void InBattle::into(iUserIO* u)
+		{
+			u->Mapper = &UserIO::InBattleMap;
+		}
+
+		void InBattle::on(iUserIO* u)
+		{
+			// do nothing 
+		}
+
+		void InBattle::off(iUserIO* u)
+		{
+			// do nothing  
+		}
+
+		IMPL_STATE(GatheringPower)
+		void GatheringPower::into(iUserIO* u)
+		{
+			// perhaps does not need this state 
+			// FIXME::
+		}
+
+		void GatheringPower::on(iUserIO* u)
 		{
 		}
 
-		void OnlyMouse::on(iUserIO* u)
+		void GatheringPower::off(iUserIO* u)
 		{
 		}
 
-		void OnlyMouse::off(iUserIO* u)
-		{
-		}
+		
 	}
 }

@@ -5,7 +5,8 @@ sol::state iRenderAssembly::vm_ {};
 std::queue<std::string> Logger::cache_{};
 size_t Protocol::LoginBuilder::req_num_{ 0 };
 
-UserIO::KeyMap UserIO::SignInMap = {
+UserIO::KeyMap UserIO::SignInMap = 
+{
 
 	// esc -> exit game
 	{ (char)27, []() {	Client::instance()->State->into(state::client::Wrong::instance()); }},
@@ -14,7 +15,8 @@ UserIO::KeyMap UserIO::SignInMap = {
 	// {}
 };
 
-UserIO::KeyMap UserIO::PickRoomMap = {
+UserIO::KeyMap UserIO::PickRoomMap = 
+{
 	// c -> create a room 
 	{
 		'c', []()
@@ -44,3 +46,10 @@ UserIO::KeyMap UserIO::PickRoomMap = {
 			Dispatcher::dispatch(ThreadId::N, "JoinRoom", ArgsPackBuilder::create(std::move(id)));
 		}}
 };
+
+
+UserIO::KeyMap UserIO::InBattleMap = 
+{
+
+};
+

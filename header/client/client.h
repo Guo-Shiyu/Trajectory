@@ -13,7 +13,7 @@ public:
     using SelfState = StateMachine<Client>;
 
 public:
-    GameInfo*   GameCore;
+    iGameInfo*   GameCore;
     iRender*    Render;
     iNetIO*     Net;
     iUserIO*    Userio;

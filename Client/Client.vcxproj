@@ -33,8 +33,8 @@
     <ClCompile Include="..\src\client\userio.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\header\area.hpp" />
     <ClInclude Include="..\header\client\assist.h" />
-    <ClInclude Include="..\header\client\backround.h" />
     <ClInclude Include="..\header\client\client.h" />
     <ClInclude Include="..\header\client\game.h" />
     <ClInclude Include="..\header\client\ilpc.h" />

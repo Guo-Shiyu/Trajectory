@@ -51,5 +51,5 @@ public:
     UserIO *panic() noexcept override final;
 
     // defined in 'static.cpp' 
-    static  KeyMap  SignInMap, PickRoomMap;
+    static  KeyMap  SignInMap, PickRoomMap, InBattleMap;
 };

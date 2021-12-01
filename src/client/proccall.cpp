@@ -12,13 +12,10 @@ std::unordered_map<ThreadId, CallMap> Dispatcher::LpcMap =
 					// field depend on server reply 
 					json selfrd = std::any_cast<json>(pack.value()->args_pack().front());
 					
-					auto str = selfrd.dump();
-			std::cout << std::format("RegistRoomInfo called, self's room info:{}", str) << std::endl;
 					// save it in configuration
 					Client::configer().create_named_table("RoomInfo");
-					Client::configer()["RoomInfo"] = Client::configer()["Json"]["decode"].call(std::move(str));
-					
-					// Client::instance()->game_info()->fill_roominfo(std::move(selfrd));
+					Client::configer()["RoomInfo"] = Client::configer()["Json"]["decode"].call(std::move(selfrd.dump()));
+					Client::instance()->GameCore->RoomInfo = std::move(selfrd);
 				}
 			},
 		}
@@ -136,18 +133,30 @@ std::unordered_map<ThreadId, CallMap> Dispatcher::LpcMap =
 				{
 					assert(NetIO::instance()->State->in_state(state::net::ToLoginServ::instance()));
 					
-					auto req = Protocol::LoginBuilder::make().deal_type("Request");
 					const auto& pre = Client::configer();
-					if (pre["Area"].get_type() == sol::type::nil)
+					bool unprepared = true;
+					auto req = Protocol::LoginBuilder::make().deal_type("Request");
+					if (Client::instance()
+						->GameCore
+						->AreaInfo == nullptr)
 					{
 						json apdx;
 						apdx["Name"] = pre["RoomInfo"]["Area"].get<std::string>();
 						req.deal_subtype("Area").deal_appendix(apdx);
 					}
 					// TODO: other resources 
-					// else if ()
+					// else if (pre["Player"].get_type() == sol::type::nil)
+					// {
+					//		
+					// }
+					else
+					{
+						// everythng is ok
+						unprepared = false;
+					}
 
-					NetIO::instance()
+					if (unprepared)
+						NetIO::instance()
 						->connect()
 						->channel
 						->write(req.build());
@@ -298,6 +307,7 @@ Protocol::NetMsgResponser Protocol::LoginRpcMap =
 					Dispatcher::dispatch(ThreadId::R, "DisplaySelfRoom", ArgsPackBuilder::create(packet));
 				}
 			},
+
 		}
 	},
 

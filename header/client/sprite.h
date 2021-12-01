@@ -143,12 +143,13 @@ class Scene : public iScene
 	SINGLETON_DECL(Scene)
 public:
 	using LayerView = std::list<Sprite>;
+
 private:
 	LayerView 	actives_;	// active layer, magical,   (x, y, frame)
 	LayerView   objects_;	// object layer, stationary (x, y, _	)
 	LayerView 	uis_;		// ui layer		 placed		(_, _, frame)	
 	LayerView 	menus_;  	// menu layer    static     (_, _, _	)
-	std::mutex lock_;
+	std::mutex  lock_;
 
 
 private:
@@ -162,7 +163,7 @@ public:
 
 	Scene* draw_frame() noexcept;
 
-	Scene* new_sprite(RenderLayer layer, Sprite&& sprite) noexcept;
+	Scene* new_sprite(RenderLayer layer, Sprite&& sprite) noexcept override;
 
 	Scene* clear() noexcept override;
 

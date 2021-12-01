@@ -93,7 +93,7 @@ Scene* Scene::update(size_t frame, iGameInfo* game) noexcept
 
 			// dead sprite's age = std::numberic_limit<size_t>::max();
 			if (it->Age == Sprite::Forever)
-				container.erase(it), std::cout << "delete one sprite" << std::endl;
+				container.erase(it);
 		}
 	};
 

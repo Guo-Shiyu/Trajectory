@@ -32,9 +32,10 @@ local module =
     
     NetIO = 
     {
-        LoginServerAddr = "172.22.51.14", 
+        LoginServerAddr = "172.29.153.36", 
         TargetPort  = 24680,
         
+        BattlePort = 24678,
     },
 }
 

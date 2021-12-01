@@ -11,7 +11,7 @@ std::string as_str(const unsigned char byte_vkcode) noexcept
 	}
 }
 
-char RandHex()	noexcept
+char rand_hexdigit() noexcept
 {
 	static std::string hexs = { "0123456789abcdef" };
 	static std::default_random_engine rd{};

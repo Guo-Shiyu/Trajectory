@@ -29,8 +29,8 @@ namespace state {
     namespace uio {
         using UioState = StateBase<iUserIO>;
         _MACRO_USE_(
-            GEN_STATE_3(UioState, iUserIO,
-                SignIn, PickRoom, OnlyMouse
+            GEN_STATE_4(UioState, iUserIO,
+                SignIn, PickRoom, InBattle, GatheringPower 
             )
         )
     }

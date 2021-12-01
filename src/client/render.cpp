@@ -16,7 +16,7 @@ Render* Render::lazy_init() noexcept
 	int width = screen["Width"], height = screen["Hight"];
 	if (screen["DevloperConsole"].get_or(true))	// default open instant log 
 	{
-		this->cli_ = new DevelopLogger(0, 0, "client:{}");
+		this->cli_ = new DevelopLogger(0, 0, "FPS:{}");
 		this->net_ = new DevelopLogger(0, height - 20, "net:{}");
 		this->user_ = new DevelopLogger(width - 100, 0, "key:{}");
 	}

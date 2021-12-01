@@ -28,6 +28,7 @@
     <None Include="..\sevcfg.lua" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\header\area.hpp" />
     <ClInclude Include="..\header\battle\battle.h" />
     <ClInclude Include="..\header\battle\protocol.h" />
   </ItemGroup>

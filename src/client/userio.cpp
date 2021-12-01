@@ -17,18 +17,20 @@ UserIO* UserIO::ensure() noexcept
 
 UserIO* UserIO::start() noexcept
 {
-	this->eloop_->loop()->setInterval(10,	// check user input every 10ms
-		[&](hv::TimerID id) noexcept
-		{
-			if (ExMessage exmsg; peekmessage(&exmsg, (BYTE)255U, true))
-				if (exmsg.message == WM_CHAR)
-				{
-					Dispatcher::dispatch(ThreadId::R, "InputLog", ArgsPackBuilder::create(exmsg));
-					auto key = toascii(exmsg.vkcode);
-					if (this->Mapper->contains(key))
-						this->Mapper->at(key)();
-				}
-		});
+	this->eloop_
+		->loop()
+		->setInterval(10,	// check user input every 10ms
+			[&](hv::TimerID id) noexcept
+			{
+				if (ExMessage exmsg; peekmessage(&exmsg, (BYTE)255U, true))
+					if (exmsg.message == WM_CHAR)
+					{
+						Dispatcher::dispatch(ThreadId::R, "InputLog", ArgsPackBuilder::create(exmsg));
+						auto key = toascii(exmsg.vkcode);
+						if (this->Mapper->contains(key))
+							this->Mapper->at(key)();
+					}
+			});
 	this->eloop_->start();
 	return this;
 }

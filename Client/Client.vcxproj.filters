@@ -95,10 +95,10 @@
     <ClInclude Include="..\header\client\assist.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="..\header\client\backround.h">
+    <ClInclude Include="..\header\client\sprite.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="..\header\client\sprite.h">
+    <ClInclude Include="..\header\area.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

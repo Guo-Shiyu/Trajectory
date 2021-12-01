@@ -13,7 +13,7 @@
 std::string as_str(const unsigned char byte_vkcode) noexcept;
 
 // return a random char in hex-digit
-char RandHex()	noexcept;
+char rand_hexdigit()	noexcept;
 
 std::optional<std::string> read_to_string(std::string filename) noexcept;
 

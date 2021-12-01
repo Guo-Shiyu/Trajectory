@@ -40,5 +40,8 @@
     <ClInclude Include="..\header\battle\protocol.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="..\header\area.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
