@@ -5,11 +5,7 @@ SINGLETON_IMPL(Scene);
 iRenderAssembly::iRenderAssembly()
 {
 	static std::once_flag inited{};
-	std::call_once(inited, [this]()
-		{
-			this->open_libraries()
-				->regist_action();
-		});
+	std::call_once(inited, [this](){	this->regist_action();	});
 };
 
 iRenderAssembly* iRenderAssembly::regist_action() noexcept

@@ -1,5 +1,0 @@
-local weapon = {
-    
-}
-
-return weapon

@@ -120,8 +120,11 @@ namespace Dispatcher
 extern std::unordered_map<ThreadId, CallMap> LpcMap;
 
 // public interface : dispatch msg to other thread 
-inline void dispatch(const ThreadId target, ProcIndex index, std::optional<ArgsPack> args) noexcept
+inline void dispatch(const ThreadId target, ProcIndex index, std::optional<ArgsPack> args = std::nullopt) noexcept
 {
+#ifdef _DEBUG 
+    std::cout << std::format("dispatcher: target:{:6}, index:{:14}", as_str(target), index) << std::endl;
+#endif 
     Dispatcher::LpcMap.at(target)			// get target thread's CallMap
                         .at(index)			// get target fn with designed index 
                       /*.call*/(args);		// call fn with args

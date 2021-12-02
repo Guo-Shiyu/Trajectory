@@ -5,7 +5,7 @@ NetIO *NetIO::lazy_init() noexcept
 {
     this->State = new SelfState(this);
     this->State->set_current(state::net::ToLoginServ::instance());
-    this->conn_ = new hv::TcpClient();
+    // this->conn_ = new hv::TcpClient();
     return this;
 }
 

@@ -1,4 +1,5 @@
 #include "../../header/client/render.h"
+#include "../../header/client/game.h"
 
 SINGLETON_IMPL(Render)
 
@@ -27,7 +28,7 @@ Render* Render::lazy_init() noexcept
 
 Render* Render::ensure() noexcept
 {
-	this->configer()["Ensure"]["RenderEnsure"].call();
+	this->renderer()["Ensure"]["RenderEnsure"].call();
 	return this;
 }
 

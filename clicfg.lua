@@ -8,7 +8,7 @@ local module =
         SelfDescriptor = 
         {
             Name    =   "h123言",
-            Weapon  =   1,
+            Weapon  =   "C",
             Style   =
             {
                 FaceColor   =  321,
@@ -32,10 +32,10 @@ local module =
     
     NetIO = 
     {
-        LoginServerAddr = "172.29.153.36", 
+        LoginServerAddr = "172.29.148.11", 
         TargetPort  = 24680,
         
-        BattlePort = 24678,
+        BattlePort = 24676,
     },
 }
 

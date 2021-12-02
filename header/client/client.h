@@ -1,10 +1,12 @@
 #pragma once
 
-#include "states.h"
-#include "render.h"
-#include "userio.h"
-#include "netio.h"
-#include "game.h" 
+#include "../client/ithreads.h"
+#include "../fsmdef.h"
+
+class iGameInfo;
+class iRender;
+class iNetIO;
+class iUserIO;
 
 class Client :  public iLua, virtual public WorkThread<StateMachine<Client>, std::nullptr_t>
 {

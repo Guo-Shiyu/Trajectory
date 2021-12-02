@@ -2,8 +2,7 @@
 #include "../hv/singleton.h"
 #include "../hv/json.hpp"
 
-#include "../client/iluavm.h"
-
+#include "../fsmdef.h"
 #define _CLIENT
 #include "../area.hpp"
 
@@ -18,22 +17,22 @@ enum class TurnFace : bool
 class iGameInfo : public iConfig 
 {
 public:
-    json RoomInfo;
-    json PlayerInfo;
+    json* RoomInfo;
+    json* PlayerInfo;
     BattleArea* AreaInfo;
-    sol::table WeaponInfo;
+    sol::table* WeaponInfo;
 
 public:
     virtual bool is_ready() noexcept = 0;
     virtual iGameInfo* ensure() noexcept = 0;
-    virtual iGameInfo* fix_angle(int incr) noexcept = 0;
-    virtual iGameInfo* turn_face(TurnFace turn) noexcept = 0;
+    // virtual iGameInfo* fix_angle(int incr) noexcept = 0;
+    // virtual iGameInfo* turn_face(TurnFace turn) noexcept = 0;
 };
 
 namespace Game
 {
 
-using GameState = StateBase<GameInfo>;
+using GameState = StateBase<iGameInfo>;
 _MACRO_USE_(
     GEN_STATE_2(GameState, iGameInfo, 
         OtherRound, SelfRound
@@ -52,11 +51,11 @@ public:
     SelfState* State;
 
 public:
-    GameInfo() : State(nullptr), RoomInfo(), Area(nullptr) {}
+    GameInfo() : iGameInfo(), State(nullptr)  {}
 
     bool is_ready() noexcept
     {
-        return Area != nullptr;
+        return AreaInfo != nullptr;
     }
 
     GameInfo* ensure() noexcept override 

@@ -1,8 +1,13 @@
 #include "../../header/client/client.h"
- 
+#include "../../header/client/userio.h"
+#include "../../header/client/netio.h"
+#include "../../header/client/sprite.h"
+
 sol::state iConfig::configer_{};
 sol::state iRenderAssembly::vm_ {};
+
 std::queue<std::string> Logger::cache_{};
+
 size_t Protocol::LoginBuilder::req_num_{ 0 };
 
 UserIO::KeyMap UserIO::SignInMap = 

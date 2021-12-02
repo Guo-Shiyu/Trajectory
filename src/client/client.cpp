@@ -1,5 +1,10 @@
 #include "../../header/hv/hstring.h"
 #include "../../header/client/client.h"
+#include "../../header/client/states.h"
+#include "../../header/client/userio.h"
+#include "../../header/client/netio.h"
+#include "../../header/client/render.h"
+#include "../../header/client/game.h"
 
 void Client::prepare_for_light()
 {
@@ -16,8 +21,9 @@ void Client::prepare_for_light()
     project = project.parent_path();
 
     // load resource file
-    clog("Start Load Resource For Configer");
+    clog("Start Load Resource For Configer VM & Renderer VM");
     load_all_mod(&Client::configer(), project.concat("\\resource\\script"));
+    load_all_mod(&Render::renderer(), project);
 } 
 
 void Client::shine() noexcept
@@ -60,7 +66,7 @@ Client *Client::lazy_init() noexcept
     this->vm_.open_libraries(sol::lib::base, sol::lib::string, 
                              sol::lib::package, sol::lib::table, 
                              sol::lib::io, sol::lib::math);
-    clog("Start Load Resource For Client's VM");
+    clog("Start Load Resource For Renderer VM");
     auto resource_path = configer()["Config"]["Client"]["ResourcePath"].get<std::string>();
     load_all_mod(&this->vm_, std::filesystem::path{resource_path}.concat("\\script"));
     return this;

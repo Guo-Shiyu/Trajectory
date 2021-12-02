@@ -41,9 +41,11 @@ public:
     static sol::state &configer() noexcept
     {
         static std::once_flag flag{};
-        std::call_once(flag, [vm = &iConfig::configer_]
-                       { vm->open_libraries(sol::lib::base, sol::lib::coroutine,
-                                            sol::lib::string, sol::lib::table); });
+        std::call_once(flag, [vm = &iConfig::configer_]()
+        { 
+            vm->open_libraries(sol::lib::base, sol::lib::coroutine,
+                                            sol::lib::string, sol::lib::table); 
+        });
         return iConfig::configer_;
     }
 

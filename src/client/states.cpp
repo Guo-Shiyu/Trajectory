@@ -1,12 +1,16 @@
 #include "../../header/client/states.h"
 #include "../../header/client/client.h"
+#include "../../header/client/userio.h"
+#include "../../header/client/netio.h"
+#include "../../header/client/render.h"
+#include "../../header/client/game.h"
 
-#define IMPL_STATE(self)   \
-    self *self::instance() \
-    {                      \
-        static self obj;   \
-        return &obj;       \
-    }
+#define IMPL_STATE(self)	\
+self *self::instance()		\
+{							\
+    static self obj;		\
+    return &obj;			\
+}
 
 namespace state
 {
@@ -47,7 +51,7 @@ namespace state
 				->Mapper	// space -> pick room
 				->insert_or_assign(' ', []() {
 					if (NetIO::instance()->State->in_state(state::net::Offline::instance()))
-						Dispatcher::dispatch(ThreadId::R, "OfflineAlert", std::nullopt);
+						Dispatcher::dispatch(ThreadId::R, "OfflineAlert");
 					else
 						Client::instance()->State->into(state::client::PickRoom::instance());
 				});
@@ -69,7 +73,7 @@ namespace state
 		void SignIn::off(Client* c)
 		{
 			// report self infomation to loginserver
-			Dispatcher::dispatch(ThreadId::N, "SayHello", std::nullopt);
+			Dispatcher::dispatch(ThreadId::N, "SayHello");
 
 			// flush screen 
 			c->Render->clear(RenderLayer::Menu);
@@ -86,7 +90,7 @@ namespace state
 		{
 			// request room data by polling
 			constexpr size_t poll_interval = 2;
-			Dispatcher::dispatch(ThreadId::N, "RequestRooms", std::nullopt);
+			Dispatcher::dispatch(ThreadId::N, "RequestRooms");
 			Sleep(poll_interval * 1000);
 		}
 
@@ -109,13 +113,13 @@ namespace state
 
 			// poll frequency control params
 			constexpr int PSRI = 1 * 1000;		// polling self room infomation interval
-			constexpr int RRI  = 0.2 * 1000;	// request resources interval
+			constexpr int RRI  = 0.4 * 1000;	// request resources interval
 			constexpr int STAGE_NUM = 5;
 
 			switch (counter % (STAGE_NUM + 1))
 			{
 			case 0:	// poll self room info, interval = PSRI + STAGE_NUM * RRI
-				Dispatcher::dispatch(ThreadId::N, "ReqSelfRoomInfo", std::nullopt);
+				Dispatcher::dispatch(ThreadId::N, "ReqSelfRoomInfo");
 				Sleep(PSRI);
 				break;
 
@@ -125,8 +129,12 @@ namespace state
 					// make 'space' key usable (start game) 
 					UserIO::PickRoomMap.insert_or_assign(' ', []()
 						{
-							// change state into Battle
-							Client::instance()->State->into(state::client::Battle::instance());
+							const auto& self = Client::configer()["Config"]["Client"]["SelfDescriptor"];
+							const auto& room = Client::configer()["RoomInfo"];
+							if (self["Uid"].get<int>() == room["Owner"].get<int>())
+								Dispatcher::dispatch(ThreadId::N, "StartGame");
+							else
+								Render::instance()->refresh(ThreadId::N, "You aer not the owner of this room, can't start game");
 						});
 				}
 				break;
@@ -136,7 +144,7 @@ namespace state
 				
 				// request battle resource stagedly, interval = RRI (5/6) | RRI + PSRI (1/6) 
 				if (not GameInfo::instance()->is_ready())
-					Dispatcher::dispatch(ThreadId::N, "ReqResources", std::nullopt);
+					Dispatcher::dispatch(ThreadId::N, "ReqResources");
 				break;
 			}
 			counter++;
@@ -145,35 +153,42 @@ namespace state
 		void InRoom::off(Client* c)
 		{
 			// remove key 'space' in pickroom map 
-			UserIO::PickRoomMap.erase(' ');  
+			UserIO::PickRoomMap.erase(' ');
+
+			// notify loginserver to start game 
+			Dispatcher::dispatch(ThreadId::N, "StartGame");
 
 			// pause userio thread 
 			Client::instance()->Userio->pause();
-
-			// netio redirect to battle server 
-			Client::instance()
-				->Net
-				->State
-				->into(state::net::ToBattleServ::instance());
 		}
 
 		IMPL_STATE(Battle)
 		void Battle::into(Client* c)
 		{
 			// recount 3s to wair server prepared  
-			constexpr size_t wait_seconds = 3U;
+			constexpr size_t wait_seconds = 4U;
 
 			Client::instance()
 				->Render
 				->clear_all()
-				->submit(RenderLayer::Active, "Recounter", [](auto, auto){}, wait_seconds);
-			Sleep(wait_seconds * 1000);
+				->submit(RenderLayer::Active, "Recounter", [](auto, auto) {}, wait_seconds);
+			Sleep((wait_seconds - 1) * 1000);
+			Render::instance()->clear(RenderLayer::Active);
 
+			// netio redirect to battle server 
+			Client::instance()
+				->Net
+				->State
+				->into(state::net::ToBattleServ::instance());
+
+			// restart userio thread 
 			Client::instance()
 				->Userio
 				->resume()
 				->State
-				->into(state::uio::GatheringPower::instance());
+				->into(state::uio::InBattle::instance());
+
+			// init game core and show game scene 
 		}
 
 		void Battle::on(Client* c)
@@ -251,12 +266,12 @@ namespace state
 			reconn.min_delay = 1000; // 1s 
 			reconn.max_delay = 5000; // 5s
 			reconn.delay_policy = 1; // wait 1, 2, 3, 4, 5, 5, 5s ...
-			n->connect()->setReconnect(&reconn);
+			n->Conn->setReconnect(&reconn);
 		}
 
 		void Offline::on(iNetIO* n)
 		{
-			if (n->connect()->channel->isConnected())
+			if (n->Conn->channel->isConnected())
 				n->State->into(state::net::ToLoginServ::instance());
 
 			// offline timer 
@@ -281,10 +296,14 @@ namespace state
 		{
 			clog("Netio into state ToLoginServer");
 
-			auto cli = n->connect();
+			// lazy init tcp client 
+			n->Conn = new hv::TcpClient();
+			auto cli = n->Conn;
+
 			const auto& config = Client::configer()["Config"]["NetIO"];
 			std::string addr = config["LoginServerAddr"];
 			int port = config["TargetPort"];
+
 			int connfd = cli->createsocket(port, addr.c_str());
 
 #ifdef _DEBUG
@@ -338,27 +357,41 @@ namespace state
 
 		void ToLoginServ::off(iNetIO* n)
 		{
-			// do nothing 
+			if (n->Conn)
+				n->Conn->stop();
 		}
 
 		IMPL_STATE(ToBattleServ)
 		void ToBattleServ::into(iNetIO* n)
 		{
 			// battle server addr has stored in Config->RoomInfo and GameInfo->RoomInfo
-			auto sevaddr = Client::instance()
-										->GameCore
-										->RoomInfo["Sevaddr"].get<std::string>();
+			auto sevaddr = Client::configer()["RoomInfo"]["SevAddr"].get<std::string>();
 			auto port = n->configer()["Config"]["NetIO"]["BattlePort"].get<int>();
+			
+			// addr:port -> addr 
+			auto delimeter = sevaddr.find_first_of(':');
+			sevaddr.erase(delimeter, sevaddr.size() - delimeter);
+			
+			// recorrect tcp client 
+			auto old = n->Conn;
+			n->Conn = new hv::TcpClient();
+			auto cli = n->Conn;
 
-			auto cli = n->connect();
-			cli->stop();
+			// inherit callback function 
+			cli->onConnection = old->onConnection;
+			cli->onMessage = old->onMessage;
+			cli->reconnect_info = old->reconnect_info;
+			
+			// delete resource 
+			delete old;
+
+			// reconstruct new connection 
 			int connfd = cli->createsocket(port, sevaddr.c_str());
 
 #ifdef _DEBUG
 			assert(connfd >= 0);
 #endif // _DEBUG
 
-			// cli->onMessage/onConnection/onWriteComplete needn't change 
 			// unblocking start 
 			cli->start(false);
 		}
@@ -370,7 +403,8 @@ namespace state
 
 		void ToBattleServ::off(iNetIO* n)
 		{
-			// do nothing 
+			n->Conn->stop();
+			delete n->Conn;
 		}
 	}
 
@@ -440,5 +474,42 @@ namespace state
 		}
 
 		
+	}
+}
+
+
+namespace Game
+{
+	IMPL_STATE(OtherRound)
+	void OtherRound::into(iGameInfo* g)
+	{
+
+	}
+
+	void OtherRound::on(iGameInfo* g)
+	{
+
+	}
+
+	void OtherRound::off(iGameInfo* g)
+	{
+
+	}
+
+
+	IMPL_STATE(SelfRound)
+	void SelfRound::into(iGameInfo* g)
+	{
+
+	}
+
+	void SelfRound::on(iGameInfo* g)
+	{
+
+	}
+
+	void SelfRound::off(iGameInfo* g)
+	{
+
 	}
 }

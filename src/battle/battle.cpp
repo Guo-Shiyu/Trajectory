@@ -14,11 +14,14 @@ BattleServer* BattleServer::start() noexcept
     int port = config["ActivePort"];
     int connfd = cli.createsocket(port, addr.c_str());
 
-    cli.onConnection = [port](const hv::SocketChannelPtr& channel) {
+    cli.onConnection = [this, port](const hv::SocketChannelPtr& channel) {
         std::string peeraddr = channel->peeraddr();
         std::string info;
         if (channel->isConnected())
+        {
             info = std::format("connected to {}, connfd:{}\n", peeraddr, channel->fd());
+            this->say_hi();
+        }
         else
         {
             LOGI("%s", std::format("Can't connect to LoginServer at {}, program has terminated", peeraddr).c_str());

@@ -42,6 +42,5 @@ public:
 
     BattleServer* say_hi() noexcept;
 
-
     static void init(std::string&& path) noexcept;
 };

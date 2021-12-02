@@ -34,4 +34,20 @@ module.OpenAnimation = function (x, y, color, rbase, rfinal, rate)
     -- end
 end
 
+module.Recounter = function (second)
+    local sec = second 
+    coroutine.yield()
+
+    local toshow = sec
+    for i = 1, 100 * sec, 1 do
+        Set.SetLineColor(0xFFFFFF)
+        Set.SetTextStyle(50, 50, "Terminal")
+        Act.Xyout(200, 200, tostring(toshow))
+        if i % 100 == 0  then
+            toshow  = toshow - 1
+        end
+        coroutine.yield()
+    end
+end
+
 return module

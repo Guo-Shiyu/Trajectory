@@ -1,8 +1,8 @@
 #pragma once
 
+#include "../hv/singleton.h"
 #include "iluavm.h"
 #include "ilpc.h"
-#include "game.h"
 
 #include <codecvt>
 #include <set>
@@ -21,15 +21,6 @@ protected:
 	
 	virtual ~iRenderAssembly() {};
 
-	iRenderAssembly* open_libraries() noexcept
-	{
-		this->vm_.open_libraries(sol::lib::base, sol::lib::coroutine,
-			sol::lib::math, sol::lib::package,
-			sol::lib::table, sol::lib::string,
-			sol::lib::os);
-		return this;
-	}
-
 	// regist EasyX function to lua
 	virtual iRenderAssembly* regist_action() noexcept;
 
@@ -39,6 +30,12 @@ protected:
 public:
 	static sol::state& renderer() noexcept
 	{
+		static std::once_flag flag{};
+		std::call_once(flag, [vm = &iRenderAssembly::vm_]()
+		{ 
+			vm->open_libraries(sol::lib::base, sol::lib::coroutine,
+								 sol::lib::string, sol::lib::table); 
+		});
 		return iRenderAssembly::vm_;
 	}
 };
@@ -112,6 +109,7 @@ public:
     }
 };
 
+class iGameInfo;
 // universal sprite type, update by 'GameInfo' 
 using Sprite = SpriteBase<iGameInfo*>;
 
