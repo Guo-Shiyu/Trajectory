@@ -13,8 +13,14 @@ size_t Protocol::LoginBuilder::req_num_{ 0 };
 UserIO::KeyMap UserIO::SignInMap = 
 {
 
-	// esc -> exit game
-	{ (char)27, []() {	Client::instance()->State->into(state::client::Wrong::instance()); }},
+	
+	{	// esc -> exit game
+		(char)27, []() 
+		{	
+			// FIXME: just for test 
+			Client::instance()->State->into(state::client::Wrong::instance()); 
+		}
+	},
 
 	// TODO: tab -> edit self infomation   
 	// {}

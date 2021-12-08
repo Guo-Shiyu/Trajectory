@@ -68,10 +68,9 @@ std::unordered_map<ThreadId, CallMap> Dispatcher::LpcMap =
 			{
 				"ReqSelfRoomInfo", [](std::optional<ArgsPack> pack)
 				{
-					assert(NetIO::instance()->State->in_state(state::net::ToLoginServ::instance()));
-
+					auto& roominfo = *GameInfo::instance()->RoomInfo;
 					json apdx{};
-					apdx["RoomId"] = GameInfo::instance()->RoomInfo->at("Id").get<int>();
+					apdx["RoomId"] = roominfo["Id"].get<int>();
 
 					NetIO::instance()
 						->Conn
@@ -126,6 +125,7 @@ std::unordered_map<ThreadId, CallMap> Dispatcher::LpcMap =
 			{
 				"StartGame", [](std::optional<ArgsPack> pack)
 				{
+					assert(NetIO::instance()->State->in_state(state::net::ToLoginServ::instance()));
 					const json& room = *GameInfo::instance()->RoomInfo;
 					
 					json apdx;
@@ -150,6 +150,7 @@ std::unordered_map<ThreadId, CallMap> Dispatcher::LpcMap =
 					
 					const auto& pre = Client::configer();
 					bool unprepared = true;	// unprepared well flag 
+					
 					auto req = Protocol::LoginBuilder::make().deal_type("Request");
 					auto game = Client::instance()->GameCore;
 					if (game->AreaInfo == nullptr)
@@ -319,7 +320,12 @@ Protocol::NetMsgResponser Protocol::LoginRpcMap =
 			{
 				"SelfRoom", [](const json& packet)
 				{
-					// notify render show room list 
+					// update self room info
+					auto& self = *(GameInfo::instance()->RoomInfo);
+					self["InRoom"] = packet["Info"]["InRoom"];
+					// Client::configer()["RoomInfo"]
+
+					// notify render to show self room info  
 					Dispatcher::dispatch(ThreadId::R, "DisplaySelfRoom", ArgsPackBuilder::create(packet));
 				}
 			},
@@ -328,10 +334,11 @@ Protocol::NetMsgResponser Protocol::LoginRpcMap =
 				"Area", [](const json& packet)
 				{
 					clog("{}", packet.dump());
-					auto area = new BattleArea(packet["Width"].get<size_t>(), packet["Height"].get<size_t>());
+					size_t realw{ packet["Width"].get<size_t>() * BattleArea::unitwidth }, realh{ packet["Height"].get<size_t>() * BattleArea::unitheight };
+					GameInfo::instance()->AreaInfo = new BattleArea(realw, realh);
 					auto stream = packet["Stream"].get<std::string>();
-					area->rawbits() = BattleArea::extract_from_bitstream(stream);
-					GameInfo::instance()->AreaInfo = area;
+					GameInfo::instance()->AreaInfo->rawbits() = BattleArea::extract_from_bitstream(stream);
+
 					Render::instance()->refresh(ThreadId::N, " Load Area Info Success");
 				}
 			},
@@ -339,9 +346,12 @@ Protocol::NetMsgResponser Protocol::LoginRpcMap =
 			{
 				"Weapon", [](const json& packet)
 				{
-					Client::configer()["Weapon"] = Client::configer().do_string(packet.dump());
+					auto msgstr = packet["Weapons"].get<std::string>();
+					Client::configer()["Weapon"] = Client::configer().do_string(std::move(msgstr));
+					clog("{}", msgstr);
 					auto myweapon = Client::configer()["Config"]["Client"]["SelfDescriptor"]["Weapon"].get<std::string>();
 					GameInfo::instance()->WeaponInfo = new sol::table(Client::configer()["Weapon"][myweapon].get<sol::table>());
+					
 					Render::instance()->refresh(ThreadId::N, " Load Weapon Info Success");
 				}
 			},
@@ -361,9 +371,13 @@ Protocol::NetMsgResponser Protocol::LoginRpcMap =
 					{	   
 						// record room info in configuration
 						Client::configer().create_named_table("RoomInfo");
-						Client::configer()["RoomInfo"] = Client::configer()["Json"]["decode"].call(packet["RoomInfo"].dump()).get<sol::table>();
-						GameInfo::instance()->RoomInfo = new json(packet["RoomInfo"]);
-						
+						Client::configer()["RoomInfo"] 
+							= Client::configer()["Json"]["decode"]
+								.call(packet["RoomInfo"].dump()).get<sol::table>();
+
+						// record room info in game core
+						GameInfo::instance()->RoomInfo = new json(std::move(packet["RoomInfo"]));
+							
 						// change state
 						Client::instance()->State->into(state::client::InRoom::instance());
 					}

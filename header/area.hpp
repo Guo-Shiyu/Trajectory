@@ -1,4 +1,5 @@
 #pragma once 
+
 #include <vector>
 #include <functional>
 
@@ -8,11 +9,11 @@
 #include "../header/client/assist.h"
 #endif // _CLIENT
 
-
 class BattleArea
 {
 public:
-	using RawProcessor	= std::function<void(std::vector<bool>&, size_t, size_t)>;
+	using BitsContainer	= std::vector<bool>;
+	using RawProcessor	= std::function<void(BitsContainer&, size_t, size_t)>;
 	using Processor		= std::function<void(BattleArea&)>;
 
 #ifdef _CLIENT
@@ -31,12 +32,12 @@ public:
 		size_t len = Col * Row;
 		bitarea_.reserve(len);
 		for (size_t i = 0; i < len; i++)
-			bitarea_.emplace_back(false);
+			bitarea_[i] = false;
 	}
 
 	bool at(size_t r, size_t c) const
 	{
-		return bitarea_.at(r * Col + c);
+		return bitarea_[r * Col + c];
 	}
 
 	void set_bit(size_t r, size_t c, bool bit)
@@ -45,23 +46,7 @@ public:
 	}
 
 #ifdef _CLIENT
-	void display_by(const std::optional<Displayer>& displayer = std::nullopt, int foucusx = 0, int foucusy = 0) const;
-	//{
-	//	static Displayer default_displayer = [](int x, int y)
-	//	{
-	//		settextstyle(fontheight, fontwidth, _T("terminal"));
-	//		outtextxy(x, y, rand_hexdigit());
-	//	};
 
-	//	// cache displayer for the following call
-	//	static Displayer display_fn;
-	//	display_fn = displayer.value_or(default_displayer);
-
-	//	for (int y = 0; y < Row; y++)
-	//		for (int x = 0; x < Col; x++)
-	//			if (bitarea_.at(y * Col + (x % Col)) == true)
-	//				display_fn(x * unitwidth + foucusx, y * unitheight + foucusy);
-	//}
 #endif // _CLIENT
 
 
@@ -75,7 +60,7 @@ public:
 		proc(*this);
 	}
 
-	std::vector<bool>& rawbits()
+	BitsContainer& rawbits()
 	{
 		return bitarea_;
 	}
@@ -83,18 +68,18 @@ public:
 	std::string zipped_bitstream() const
 	{
 		std::string ret;
-		ret.reserve(bitarea_.size() / 8);
+		ret.reserve(Col * Row / 8);
 		size_t counter = 0;
 
 		// first flag  
-		ret.push_back(bitarea_.front() ? '1' : '0');
+		ret.push_back(bitarea_[0] ? '1' : '0');
 		ret.push_back(' ');
 
 		// zip area 
-		bool cur = bitarea_.front();
-		for (const auto& bit : bitarea_)
+		bool cur = bitarea_[0];
+		for (int i = 0; i < Col * Row; i++)
 		{
-			if (bit == cur)
+			if (bitarea_[i] == cur)
 				counter++;
 			else
 			{
@@ -110,10 +95,10 @@ public:
 		return ret;
 	}
 
-	static std::vector<bool> extract_from_bitstream(std::string& bitstream)
+	static BitsContainer extract_from_bitstream(std::string& bitstream)
 	{
 		auto& bits = bitstream;
-		std::vector<bool> ret;
+		BitsContainer ret;
 		
 		// first flag 
 		bool first = std::stoull(bits) == 0 ? false : true;
@@ -141,7 +126,7 @@ public:
 	const size_t Col, Row;
 
 private:
-	std::vector<bool> bitarea_;
+	BitsContainer bitarea_;
 };
 
 

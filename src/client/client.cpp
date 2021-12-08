@@ -53,8 +53,8 @@ void Client::shine() noexcept
 Client *Client::lazy_init() noexcept
 {
     this->State = new StateMachine<Client>(this); 
-    this->GameCore = new GameInfo();       // but GameInfo inited in state 'InRoom'
 
+    this->GameCore = GameInfo::instance();
     this->Render = Render::instance();
     this->Net = NetIO::instance();
     this->Userio = UserIO::instance();

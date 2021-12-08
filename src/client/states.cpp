@@ -26,6 +26,9 @@ namespace state
 		{
 			// check initialize work and fix invalid data  
 			c->ensure();
+
+			c->Userio->State->into(state::uio::SignIn::instance());
+			c->Net->State->into(state::net::ToLoginServ::instance());
 			c->State->into(state::client::SignIn::instance());
 		}
 
@@ -38,9 +41,9 @@ namespace state
 		IMPL_STATE(SignIn)
 		void SignIn::into(Client* c)
 		{
-			// change keyboard map
-			c->Userio->State->into(state::uio::SignIn::instance());
-
+			// =============================================================================
+			// c->State->into(state::client::Develop::instance());
+			
 			// show sign in ani
 			constexpr size_t ani_continue_sec = 3; 
 			c->Render->submit(RenderLayer::Object, "IntoSignIn");
@@ -103,8 +106,12 @@ namespace state
 		IMPL_STATE(InRoom)
 		void InRoom::into(Client* c)
 		{
-			// self's room info has been recorded in configer()["RoomInfo"] during RPC process 
-			
+			// self's room info has been recorded in configer()["RoomInfo"] and 
+			// game core info wiil be inited conpletely during RPC process 
+
+			// TODO::
+			// process roominfo and playerinfo info in game core
+			// Client::instance()->GameCore->PlayerInfo = GameCore->RoomInfo.asdasdasdasdasd
 		}
 
 		void InRoom::on(Client* c)
@@ -113,7 +120,7 @@ namespace state
 
 			// poll frequency control params
 			constexpr int PSRI = 1 * 1000;		// polling self room infomation interval
-			constexpr int RRI  = 0.4 * 1000;	// request resources interval
+			constexpr int RRI  = 0.5 * 1000;	// request resources interval
 			constexpr int STAGE_NUM = 5;
 
 			switch (counter % (STAGE_NUM + 1))
@@ -134,17 +141,17 @@ namespace state
 							if (self["Uid"].get<int>() == room["Owner"].get<int>())
 								Dispatcher::dispatch(ThreadId::N, "StartGame");
 							else
-								Render::instance()->refresh(ThreadId::N, "You aer not the owner of this room, can't start game");
+								Render::instance()->refresh(ThreadId::N, "You are not the owner of this room, can't start game");
 						});
 				}
-				break;
-
-			default:	
-				Sleep(RRI);
-				
-				// request battle resource stagedly, interval = RRI (5/6) | RRI + PSRI (1/6) 
-				if (not GameInfo::instance()->is_ready())
+				else
+				{
+					// request battle resource stagedly, interval = RRI (5/6) | RRI + PSRI (1/6) 
+					Sleep(RRI);
 					Dispatcher::dispatch(ThreadId::N, "ReqResources");
+				}
+				break;
+			default:	// unreachable code 
 				break;
 			}
 			counter++;
@@ -165,15 +172,17 @@ namespace state
 		IMPL_STATE(Battle)
 		void Battle::into(Client* c)
 		{
-			// recount 3s to wair server prepared  
-			constexpr size_t wait_seconds = 4U;
+			 
+			constexpr size_t wait_seconds = 3U;
 
+			// recount 3s to wair server prepared 
 			Client::instance()
 				->Render
 				->clear_all()
 				->submit(RenderLayer::Active, "Recounter", [](auto, auto) {}, wait_seconds);
+			
+			// wait battle server start and animation 
 			Sleep((wait_seconds - 1) * 1000);
-			Render::instance()->clear(RenderLayer::Active);
 
 			// netio redirect to battle server 
 			Client::instance()
@@ -188,13 +197,54 @@ namespace state
 				->State
 				->into(state::uio::InBattle::instance());
 
-			// init game core and show game scene 
+			Render::instance()->clear(RenderLayer::Active);
+
+			// init game core and show game scene
+			auto area = Client::instance()
+				->GameCore
+				->ensure()
+				->AreaInfo;
+
+			Render::instance()
+				->Scene
+				->new_sprite(
+					RenderLayer::Object,
+					Sprite(0U, 
+						MagicFn{ [area](int foucusx, int foucusy, size_t frame, auto _)
+						{
+							settextstyle(BattleArea::fontheight, 0, L"Termianl");
+							const auto& field = area->rawbits();
+							static std::wstring buf{ 512 };
+							for (int y = 0; y < area->Row; y++)
+							{
+								bool contains{ false };
+								for (int x = 0; x < area->Col; x++)
+								{
+									buf.push_back(field.at(y * area->Col + x) ? '0': ' ');
+									contains = true;
+								}
+								if (contains)
+									outtextxy(foucusx, y * BattleArea::unitheight + foucusy, buf.c_str());
+								buf.clear();
+							}
+						} },
+						Sprite::Updator{ [render = Render::instance()](auto sprite, auto gameinfo) 
+						{
+							sprite->X = - render->Fx;
+							sprite->Y = - render->Fy;
+							sprite->Age++;
+						} }));
+
+
+			clog("GameCore Start ...");
 		}
 
 		void Battle::on(Client* c)
 		{
 			// do nothing 
-			Sleep(100);
+			Sleep(10);
+			/*c->Render->Fx++;
+			c->Render->Fy++;*/
 
 			// TODO: possible heartbeat here 
 		}
@@ -202,23 +252,33 @@ namespace state
 		void Battle::off(Client* c)
 		{
 			// clear AreaInfo, WeaponInfo 
-
+			auto game = GameInfo::instance();
+			delete game->AreaInfo;
+			delete game->WeaponInfo;
 		}
 
 		IMPL_STATE(Satistic)
 		void Satistic::into(Client* c)
 		{
 			// request statistic infomation 
+
 		}
 
 		void Satistic::on(Client* c)
 		{
 			// do nothing 
+
 		}
 
 		void Satistic::off(Client* c)
 		{
-			// clear Roominfo completely 
+			// clear Roominfo PlayerInfo
+			auto game = GameInfo::instance();
+			delete game->RoomInfo;
+			delete game->PlayerInfo;
+
+			c->Net->State->into(state::net::ToLoginServ::instance());
+			c->State->into(state::client::PickRoom::instance());
 		}
 
 		IMPL_STATE(Wrong)
@@ -229,13 +289,14 @@ namespace state
 
 		void Wrong::on(Client* c)
 		{
-			clog("progress exit");
+			clog("progress exit with unexpected case");
 			Logger::log_dump();
 		}
 
 		void Wrong::off(Client* c)
 		{
 			// nothing here
+			// program can't recovery from wrong state
 		}
 
 		IMPL_STATE(Develop)
@@ -358,7 +419,7 @@ namespace state
 		void ToLoginServ::off(iNetIO* n)
 		{
 			if (n->Conn)
-				n->Conn->stop();
+				n->Conn->channel->close();
 		}
 
 		IMPL_STATE(ToBattleServ)
@@ -373,17 +434,7 @@ namespace state
 			sevaddr.erase(delimeter, sevaddr.size() - delimeter);
 			
 			// recorrect tcp client 
-			auto old = n->Conn;
-			n->Conn = new hv::TcpClient();
 			auto cli = n->Conn;
-
-			// inherit callback function 
-			cli->onConnection = old->onConnection;
-			cli->onMessage = old->onMessage;
-			cli->reconnect_info = old->reconnect_info;
-			
-			// delete resource 
-			delete old;
 
 			// reconstruct new connection 
 			int connfd = cli->createsocket(port, sevaddr.c_str());
@@ -392,8 +443,6 @@ namespace state
 			assert(connfd >= 0);
 #endif // _DEBUG
 
-			// unblocking start 
-			cli->start(false);
 		}
 
 		void ToBattleServ::on(iNetIO* n)
@@ -403,8 +452,7 @@ namespace state
 
 		void ToBattleServ::off(iNetIO* n)
 		{
-			n->Conn->stop();
-			delete n->Conn;
+			n->Conn->channel->close();
 		}
 	}
 

@@ -53,7 +53,8 @@ BattleServer* BattleServer::start() noexcept
         if (channel->isConnected())
         {
             LOGI("- Established\t from:%s connfd=%d", peeraddr.c_str(), channel->fd());
-            assert(this->AddrMap.contains(peeraddr));
+            auto ip = peeraddr.erase(peeraddr.find_first_of(':'), peeraddr.back());
+            assert(this->AddrMap.contains(ip));
         }
         else
         {

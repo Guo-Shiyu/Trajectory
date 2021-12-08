@@ -89,10 +89,10 @@ Render* Render::start() noexcept
 				auto cost = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - srt).count();
 				
 				// flush fps flag every 0.2s(default) 
-				if (Frame % 20 == 0)
+				if (Frame % 5 == 0)
 				{
 					auto realfps = cost < 10 ? fps : 1000 / cost;
-					this->refresh(ThreadId::C, std::format("{:4}", realfps));
+					this->refresh(ThreadId::C, std::format("{:4}, {:4}", realfps, Frame));
 				}
 				
 				// sleep to control FPS 

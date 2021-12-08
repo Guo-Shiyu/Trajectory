@@ -6,7 +6,7 @@ local module = {
         local logger = function (name, table)
             print("", name.." resources:", type(table))
             for key, value in pairs(table) do
-                print(string.format("\t - %20s : %s", tostring(key), tostring(value)))
+                print(string.format("\t - %-20s : %s", tostring(key), tostring(value)))
             end
             print("")
         end
