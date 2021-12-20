@@ -27,6 +27,12 @@
     <ClCompile Include="..\src\battle\static.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\battle\server.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\battle\state.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\sevcfg.lua">
@@ -41,6 +47,9 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="..\header\area.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\header\fsmdef.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

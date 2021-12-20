@@ -22,6 +22,8 @@
     <ClCompile Include="..\src\battle\battle.cpp" />
     <ClCompile Include="..\src\battle\main.cpp" />
     <ClCompile Include="..\src\battle\protocol.cpp" />
+    <ClCompile Include="..\src\battle\server.cpp" />
+    <ClCompile Include="..\src\battle\state.cpp" />
     <ClCompile Include="..\src\battle\static.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -31,6 +33,7 @@
     <ClInclude Include="..\header\area.hpp" />
     <ClInclude Include="..\header\battle\battle.h" />
     <ClInclude Include="..\header\battle\protocol.h" />
+    <ClInclude Include="..\header\fsmdef.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>

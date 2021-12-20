@@ -83,13 +83,19 @@ Scene* Scene::update(size_t frame, iGameInfo* game) noexcept
 	// TODO: frenquency control
 	static auto update = [game](decltype(this->actives_)& container)
 	{
-		for (auto it = container.begin(); it != container.end(); ++it)
+		for (auto it = container.begin(); it != container.end(); )
 		{
 			it->update(game);
 
 			// dead sprite's age = std::numberic_limit<size_t>::max();
 			if (it->Age == Sprite::Forever)
-				container.erase(it);
+			{
+				// value-init list iterator 
+				container.erase(it++);
+			}
+
+			if (it != container.end())
+				++it;
 		}
 	};
 

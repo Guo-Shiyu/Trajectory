@@ -74,7 +74,7 @@ static void response(MsgFrom where, const std::string& pack, BattleServer* serve
 		Protocol::LoginRpcMap.at(packet["Type"].get<std::string>()).at(packet["SubType"].get<std::string>())(server, packet["Appendix"]);
 		break;
 	case Protocol::MsgFrom::Client:
-
+		Protocol::ClientRpcMap.at(packet["Type"].get<std::string>()).at(packet["SubType"].get<std::string>())(server, packet["Appendix"]);
 		break;
 
 		// unreachable code 

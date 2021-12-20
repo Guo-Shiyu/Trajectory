@@ -65,20 +65,25 @@ Render* Render::start() noexcept
 			// render loop 
 			while (true)
 			{
-				cleardevice();
 				auto srt = std::chrono::steady_clock::now();
 				// TODO:recorrect foucus point 
+				
+				// assert(this->Scene != nullptr ), which been inited in 'lazy_init' proc
+				Scene->update(Frame, GameInfo::instance());
 
 				// ----------------------------------------------- render begin
-				
+				if (auto& owned = iRenderAssembly::GlobalDeviceLock; owned.try_lock())
+				{
+					cleardevice();
+					
 
-				this->Scene // assert(this->Scene != nullptr ), which been inited in 'lazy_init' proc
-					->update(Frame, GameInfo::instance())
-					->draw_frame();
+					Scene->draw_frame();
+					this->show_devlog();
 
-				this->show_devlog();
 
-				FlushBatchDraw();
+					FlushBatchDraw();
+					owned.unlock();
+				}
 				// ----------------------------------------------- render end 
 
 				// increase frame counter 

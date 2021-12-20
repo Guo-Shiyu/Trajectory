@@ -3,6 +3,10 @@
 #include "../../header/client/netio.h"
 #include "../../header/client/sprite.h"
 
+// public 
+std::mutex iRenderAssembly::GlobalDeviceLock{};
+
+// private
 sol::state iConfig::configer_{};
 sol::state iRenderAssembly::vm_ {};
 

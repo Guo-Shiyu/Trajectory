@@ -114,6 +114,7 @@ static void response(MsgFrom where, const std::string& pack)
 		Protocol::LoginRpcMap.at(packet["Type"].get<std::string>()).at(packet["SubType"].get<std::string>())(packet["Appendix"]);
 		break;
 	case Protocol::MsgFrom::BattleServer:
+		Protocol::BattleRpcMap.at(packet["Type"].get<std::string>()).at(packet["SubType"].get<std::string>())(packet["Appendix"]);
 		break;
 
 		// unreachable code 

@@ -11,7 +11,13 @@ std::unordered_map<ThreadId, CallMap> Dispatcher::LpcMap =
 	{
 		ThreadId::C, 
 		{
-		
+			{
+				"Launch", [](auto _)
+				{
+					clog("Launch end, your strength:{}", GameInfo::instance()->Strength);
+
+				},
+			}
 		}
 	},
 
@@ -125,7 +131,6 @@ std::unordered_map<ThreadId, CallMap> Dispatcher::LpcMap =
 			{
 				"StartGame", [](std::optional<ArgsPack> pack)
 				{
-					assert(NetIO::instance()->State->in_state(state::net::ToLoginServ::instance()));
 					const json& room = *GameInfo::instance()->RoomInfo;
 					
 					json apdx;
@@ -276,13 +281,17 @@ std::unordered_map<ThreadId, CallMap> Dispatcher::LpcMap =
 
 
 			{
-				"SetBackRound", [](std::optional<ArgsPack> pack)
+				"IsMyRound", [](std::optional<ArgsPack> pack)
 				{
-					// roomlist: json as str 
-					// auto roomlist = std::any_cast<BackRound>(pack.value()->args_pack().front());
-					// Render::instance()
-						// ->surface()
-						// ->stick("some-name-in-lua", std::move(roomlist))
+					Render::instance()->submit(
+						RenderLayer::Active,
+						"IsMyRound",
+						Sprite::Updator{ [](auto sprite, auto _)
+							{
+								static size_t counter = 0;
+								if (counter++ % 100 == 0) // continue 1s
+									sprite->Age = Sprite::Forever;
+							} });
 				}
 			},
 
@@ -334,10 +343,11 @@ Protocol::NetMsgResponser Protocol::LoginRpcMap =
 				"Area", [](const json& packet)
 				{
 					clog("{}", packet.dump());
-					size_t realw{ packet["Width"].get<size_t>() * BattleArea::unitwidth }, realh{ packet["Height"].get<size_t>() * BattleArea::unitheight };
-					GameInfo::instance()->AreaInfo = new BattleArea(realw, realh);
+					size_t realw{ packet["Width"].get<size_t>() }, realh{ packet["Height"].get<size_t>() };
 					auto stream = packet["Stream"].get<std::string>();
-					GameInfo::instance()->AreaInfo->rawbits() = BattleArea::extract_from_bitstream(stream);
+					GameInfo::instance()->AreaInfo = new BattleArea(realw, realh, BattleArea::extract_from_bitstream(stream));
+					GameInfo::instance()->update_scn_cache();
+
 
 					Render::instance()->refresh(ThreadId::N, " Load Area Info Success");
 				}
@@ -376,7 +386,7 @@ Protocol::NetMsgResponser Protocol::LoginRpcMap =
 								.call(packet["RoomInfo"].dump()).get<sol::table>();
 
 						// record room info in game core
-						GameInfo::instance()->RoomInfo = new json(std::move(packet["RoomInfo"]));
+						GameInfo::instance()->RoomInfo = new json(packet["RoomInfo"]);
 							
 						// change state
 						Client::instance()->State->into(state::client::InRoom::instance());
@@ -412,4 +422,38 @@ Protocol::NetMsgResponser Protocol::LoginRpcMap =
 	}
 };
 
-Protocol::NetMsgResponser Protocol::BattleRpcMap = {};
+Protocol::NetMsgResponser Protocol::BattleRpcMap = 
+{
+	{
+		"Notice",
+		{
+			{
+				"TokenDispatch", [](const json& packet)
+				{
+					Client::configer()["SelfToken"].set(packet["PlaceToken"].get<std::string>());
+				}
+			},
+
+			{
+				"NextRound", [](const json& packet)
+				{
+					if (packet["PlaceToken"].get<std::string>() == Client::configer()["SelfToken"].get<std::string>())
+					{
+						Dispatcher::dispatch(ThreadId::R, "IsMyRound");
+						UserIO::instance()
+							->Mapper
+							->insert_or_assign(' ', [uio = UserIO::instance()]()
+							{
+								clog("You hit your space to start a launch");
+								uio->State->into(state::uio::GatheringPower::instance());
+								NetIO::instance()->Conn->loop()->setTimeout(3 * 1000, [uio](auto _) 
+									{
+										uio->State->into(state::uio::InBattle::instance());
+									});
+							});
+					}
+				}
+			},
+		}
+	},
+};

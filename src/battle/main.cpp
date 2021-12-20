@@ -1,5 +1,5 @@
 #include "../../header/battle/battle.h"
-
+#include "../../header/battle/server.h"
 #include <filesystem>
 
 int main()
@@ -14,12 +14,10 @@ int main()
     // init battle server with configuration path
     BattleServer::init(std::filesystem::current_path().parent_path().concat("\\sevcfg.lua").string());
     BattleServer sev;
+    
+    // blocking here 
     sev.start();
 
-    LOGI("Server Start Successfully...");
-    while (true)
-        hv_delay(2);
 
-    // end main
     return 0;
 }

@@ -50,4 +50,15 @@ module.Recounter = function (second)
     end
 end
 
+module.IsMyRound = function()
+    coroutine.yield()
+
+    for i = 1, 100, 1 do
+        Set.SetLineColor(0xFFFFFF)
+        Set.SetTextStyle(100, 100, "Terminal")
+        Act.Xyout(300, 300, "It is your turn !!!")
+        coroutine.yield()
+    end
+end
+
 return module

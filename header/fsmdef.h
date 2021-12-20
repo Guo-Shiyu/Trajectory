@@ -1,6 +1,5 @@
 #pragma once
 
-#include "log.h"
 #include <string>
 
 #define _MACRO_USE_(stmt)	stmt	// explict use precedural macro
@@ -202,6 +201,13 @@ GEN_STATE_6(base, arg, _2, _3, _4, _5, _6, _7)    \
 GEN_STATE(base, arg, _1)         \
 GEN_STATE_7(base, arg, _2, _3, _4, _5, _6, _7, _8)    \
 
+#define IMPL_STATE(self)	\
+self *self::instance()		\
+{							\
+    static self obj;		\
+    return &obj;			\
+}
+
 template<class C>
 class StateBase {
     public:
@@ -214,16 +220,17 @@ class StateBase {
 
 template<class T>
 class StateMachine {
-    public:
+public:
     using StatePtr = StateBase<T>*;
-    private:
+
+private:
     T* owner_;
     StatePtr pre_;
     StatePtr cur_;
     StatePtr global_;   // a useless var
 
-    public:
-    
+public:
+    StateMachine() = default;
     template<class T>
     StateMachine(T* owner) :owner_(owner), 
                             pre_(nullptr), 

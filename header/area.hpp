@@ -1,6 +1,8 @@
 #pragma once 
 
 #include <vector>
+#include <bitset>
+#include <optional>
 #include <functional>
 
 #ifdef _CLIENT
@@ -12,7 +14,8 @@
 class BattleArea
 {
 public:
-	using BitsContainer	= std::vector<bool>;
+	using BitProxy = char;
+	using BitsContainer = std::vector<BitProxy>; 
 	using RawProcessor	= std::function<void(BitsContainer&, size_t, size_t)>;
 	using Processor		= std::function<void(BattleArea&)>;
 
@@ -21,28 +24,31 @@ public:
 #endif // _CLIENT
 
 public:
-	constexpr static size_t fontwidth = 7, fontheight = 7;
-	constexpr static size_t unitwidth = 9, unitheight = 9;
+	constexpr static size_t FontWidth = 7, FontHeight = 7;
+	constexpr static size_t UnitWidth = 9, UnitHeight = 9;
+	constexpr static BitProxy Fill = (BitProxy)true, Empty = (BitProxy)false;
 
 public:
 	BattleArea() = delete;
+	BattleArea(const BattleArea&) = default;
 	~BattleArea() = default;
-	BattleArea(size_t wid, size_t hei) : bitarea_(), RWidth(wid), RHeight(hei), Col(wid / unitwidth), Row(hei / unitheight)
+	BattleArea(size_t col, size_t row, std::optional<BitsContainer>&& raws = std::nullopt) 
+		: bitarea_(), Col(col), Row(row), RealWid(col * UnitWidth), RealHei(row * UnitHeight)
 	{
-		size_t len = Col * Row;
-		bitarea_.reserve(len);
-		for (size_t i = 0; i < len; i++)
-			bitarea_[i] = false;
+		if (raws.has_value())
+			bitarea_ = raws.value();
+		else 
+			bitarea_.resize(Col * Row, Empty);
 	}
 
 	bool at(size_t r, size_t c) const
 	{
-		return bitarea_[r * Col + c];
+		return bitarea_[r * Col + c] == Fill;
 	}
 
 	void set_bit(size_t r, size_t c, bool bit)
 	{
-		bitarea_[r * Col + c] = bit;
+		bitarea_[(r - 1) * Col + c] = bit ? Fill : Empty;
 	}
 
 #ifdef _CLIENT
@@ -79,7 +85,7 @@ public:
 		bool cur = bitarea_[0];
 		for (int i = 0; i < Col * Row; i++)
 		{
-			if (bitarea_[i] == cur)
+			if (static_cast<bool>(bitarea_[i]) == cur)
 				counter++;
 			else
 			{
@@ -122,8 +128,8 @@ public:
 	}
 
 public:
-	const size_t RWidth, RHeight;
 	const size_t Col, Row;
+	const size_t RealWid, RealHei;
 
 private:
 	BitsContainer bitarea_;

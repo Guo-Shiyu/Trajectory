@@ -1,122 +1,64 @@
 #include "../../header/battle/battle.h"
 #include "../../header/battle/protocol.h"
 
+hv::EventLoopThreadPtr Battle::EventLoop{};
+size_t Battle::RoundLongingTime{0};
 
-
-
-
-BattleServer* BattleServer::start() noexcept
+Battle* Battle::start(const hv::EventLoopPtr& loop) noexcept 
 {
-    // connect to login server (as client)
-    auto& cli = this->ToLoginSev;
-    const sol::table& config = this->Config["Config"];
-    std::string addr = config["LoginServerAddr"];
-    int port = config["ActivePort"];
-    int connfd = cli.createsocket(port, addr.c_str());
-
-    cli.onConnection = [this, port](const hv::SocketChannelPtr& channel) {
-        std::string peeraddr = channel->peeraddr();
-        std::string info;
-        if (channel->isConnected())
-        {
-            info = std::format("connected to {}, connfd:{}\n", peeraddr, channel->fd());
-            this->say_hi();
-        }
-        else
-        {
-            LOGI("%s", std::format("Can't connect to LoginServer at {}, program has terminated", peeraddr).c_str());
-        }
-    };
-
-    cli.onMessage = [this](const hv::SocketChannelPtr& channel, hv::Buffer* buf) {
-        std::string pack{ static_cast<char*>(buf->data()), buf->size() };
-        Protocol::response(Protocol::MsgFrom::LoginServer, pack, this);
-    };
-
-    hv::ReconnectInfo info{};
-    info.delay_policy = 5;
-    info.max_delay = 10;
-    cli.setReconnect(&info);
-
-    // start net thread with blocking
-    cli.start(true);
-
-    // start self server 
-    auto& sev = this->FromClient;
-    assert(sev.createsocket(Config["Config"]["ListenPort"].get<int>()) >= 0);
-    sev.setMaxConnectionNum(Config["Config"]["MaxConnNum"].get<int>());
-    sev.setThreadNum(Config["Config"]["ThreadNum"].get<int>());
-
-    sev.onConnection = [this](const hv::SocketChannelPtr& channel)
+    check_before_start();
+    this->loop_ = loop;
+    
+    int counter = 0;
+    for (auto& [k, v] : this->ConnectMap)
     {
-        std::string peeraddr = channel->peeraddr();
-        if (channel->isConnected())
-        {
-            LOGI("- Established\t from:%s connfd=%d", peeraddr.c_str(), channel->fd());
-            auto ip = peeraddr.erase(peeraddr.find_first_of(':'), peeraddr.back());
-            assert(this->AddrMap.contains(ip));
-        }
-        else
-        {
-            LOGI("- Disconnected\t where:%s connfd=%d", peeraddr.c_str(), channel->fd());
-        }
-    };
+        this->Order.push_back(k);
+        json apdx;
+        apdx["PlaceToken"] = k;
+        v->write(Protocol::LoginBuilder::make().deal_type("Notice").deal_subtype("TokenDispatch").deal_appendix(apdx).build());
+    }
 
-    sev.onMessage = [this](const hv::SocketChannelPtr& channel, hv::Buffer* buf)
+    this->State->into(LoopStage::instance());
+    return this;
+}
+
+void Battle::check_before_start() noexcept
+{ 
+    if (RoundLongingTime == 0) 
+        RoundLongingTime = 30;
+}
+
+Battle* Battle::next_round() noexcept
+{
+    if (cur_.empty())
     {
-        std::string pack{ static_cast<char*>(buf->data()), buf->size() };
-        std::string addr = channel->peeraddr();
-        LOGI("- Receive content: %s from: %s", pack.c_str(), addr.c_str());
-        // get message from client 
-        Protocol::response(Protocol::MsgFrom::Client, pack, this);
-    };
+        cur_ = Order.front();
+    }
+    else
+    {
+        bool found = false;
+        for (auto& str : Order)
+        {
+            if (found)
+            {
+                cur_ = str;
+                break;
+            }
 
-    // start service
-    sev.start(false);
+            if (str == cur_)
+                found = true;
+        }
+    }
 
-    // display play data every 60s
-    sev.loop()->setInterval(Config["Config"]["LogInterval"].get<int>() * 1000, [this](hv::TimerID id) {
-        std::string log{};
-        log.append("\n============= routine log =============\n")
-            .append(std::format("cur battle:{}", this->Battles.size()))
-            .push_back('\n');
-
-        LOGI("%s", log.c_str());
-    });
+    for (auto& [k, v] : ConnectMap)
+    {
+        json apdx;
+        apdx["PlaceToken"] = cur_;
+        apdx["RoundLongingTime"] = RoundLongingTime;
+        v->write(Protocol::LoginBuilder::make().deal_type("Notice").deal_subtype("NextRound").deal_appendix(apdx).build());
+    }
 
     return this;
 }
 
-BattleServer* BattleServer::say_hi() noexcept
-{
-    this->ToLoginSev.channel
-        ->write(Protocol::LoginBuilder::make()
-            .deal_type("Hello")
-            .deal_subtype("Hello")
-            //.deal_appendix()
-            .build());
-    return this;
-}
 
-void BattleServer::init(std::string&& path) noexcept 
-{
-    std::once_flag flag{};
-    std::call_once(flag, [&lua = BattleServer::Config, path = std::move(path)]() {
-
-        lua.open_libraries(sol::lib::base, sol::lib::coroutine,
-            sol::lib::math, sol::lib::package,
-            sol::lib::string, sol::lib::table,
-            sol::lib::os, sol::lib::io);
-
-        // require 'sevcfg.lua' 
-        assert(lua.require_file("Config", path).valid());
-
-        // ensure config 
-        if (lua["Config"]["StdoutLog"].get<bool>())
-        {
-            // reset log stream
-            logger_set_handler(hv_default_logger(), stdout_logger);
-            LOGI("Using stdout log...");
-        }
-    });
-}

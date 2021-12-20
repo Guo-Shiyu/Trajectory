@@ -16,6 +16,7 @@ class iRenderAssembly
 {
 protected:
 	static sol::state vm_;	// renderer's luavm
+	
 
 	iRenderAssembly();
 	
@@ -28,6 +29,8 @@ protected:
 	// virtual iRenderAssembly* load_resource(std::string&& src, std::string&& mod) noexcept;
 
 public:
+	static std::mutex GlobalDeviceLock;
+
 	static sol::state& renderer() noexcept
 	{
 		static std::once_flag flag{};

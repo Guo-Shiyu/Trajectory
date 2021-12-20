@@ -5,13 +5,6 @@
 #include "../../header/client/render.h"
 #include "../../header/client/game.h"
 
-#define IMPL_STATE(self)	\
-self *self::instance()		\
-{							\
-    static self obj;		\
-    return &obj;			\
-}
-
 namespace state
 {
 	namespace client
@@ -60,8 +53,9 @@ namespace state
 				});
 
 			// show main menu 
-			c->Render->clear(RenderLayer::Object);
-			c->Render->submit(RenderLayer::Menu, "MainMenu");
+			c->Render
+				->clear(RenderLayer::Object)
+				->submit(RenderLayer::Menu, "MainMenu");
 		}
 
 		void SignIn::on(Client* c)
@@ -131,14 +125,12 @@ namespace state
 				break;
 
 			case STAGE_NUM:
-				if (GameInfo::instance()->is_ready())
+				if (auto game = GameInfo::instance(); game->is_ready())
 				{
 					// make 'space' key usable (start game) 
-					UserIO::PickRoomMap.insert_or_assign(' ', []()
+					UserIO::PickRoomMap.insert_or_assign(' ', [=]()
 						{
-							const auto& self = Client::configer()["Config"]["Client"]["SelfDescriptor"];
-							const auto& room = Client::configer()["RoomInfo"];
-							if (self["Uid"].get<int>() == room["Owner"].get<int>())
+							if (game->is_room_owner())
 								Dispatcher::dispatch(ThreadId::N, "StartGame");
 							else
 								Render::instance()->refresh(ThreadId::N, "You are not the owner of this room, can't start game");
@@ -162,9 +154,6 @@ namespace state
 			// remove key 'space' in pickroom map 
 			UserIO::PickRoomMap.erase(' ');
 
-			// notify loginserver to start game 
-			Dispatcher::dispatch(ThreadId::N, "StartGame");
-
 			// pause userio thread 
 			Client::instance()->Userio->pause();
 		}
@@ -181,8 +170,6 @@ namespace state
 				->clear_all()
 				->submit(RenderLayer::Active, "Recounter", [](auto, auto) {}, wait_seconds);
 			
-			// wait battle server start and animation 
-			Sleep((wait_seconds - 1) * 1000);
 
 			// netio redirect to battle server 
 			Client::instance()
@@ -200,41 +187,46 @@ namespace state
 			Render::instance()->clear(RenderLayer::Active);
 
 			// init game core and show game scene
-			auto area = Client::instance()
+			auto screen_cache = Client::instance()
 				->GameCore
 				->ensure()
-				->AreaInfo;
+				->ScreenCache;
 
 			Render::instance()
 				->Scene
-				->new_sprite(
+				->new_sprite(	// backround 
 					RenderLayer::Object,
 					Sprite(0U, 
-						MagicFn{ [area](int foucusx, int foucusy, size_t frame, auto _)
+						MagicFn{ [screen_cache](int x, int y, size_t _, auto __)
 						{
-							settextstyle(BattleArea::fontheight, 0, L"Termianl");
-							const auto& field = area->rawbits();
-							static std::wstring buf{ 512 };
-							for (int y = 0; y < area->Row; y++)
-							{
-								bool contains{ false };
-								for (int x = 0; x < area->Col; x++)
-								{
-									buf.push_back(field.at(y * area->Col + x) ? '0': ' ');
-									contains = true;
-								}
-								if (contains)
-									outtextxy(foucusx, y * BattleArea::unitheight + foucusy, buf.c_str());
-								buf.clear();
-							}
+							putimage(x, y, screen_cache);
 						} },
-						Sprite::Updator{ [render = Render::instance()](auto sprite, auto gameinfo) 
+						Sprite::Updator{ [render = Render::instance()](auto sprite, auto _) 
 						{
 							sprite->X = - render->Fx;
 							sprite->Y = - render->Fy;
 							sprite->Age++;
-						} }));
+						} }))
+				->new_sprite( // player 
+					RenderLayer::Object,
+					Sprite(0U, 
+						MagicFn{ [screen_cache](int x, int y, size_t _, auto __)
+						{
+							putimage(x, y, screen_cache);
+						} },
+						Sprite::Updator{ [render = Render::instance()] (auto sprite, auto _)
+						{
+							sprite->X = -render->Fx;
+							sprite->Y = -render->Fy;
+							sprite->Age++;
+						}}));
+			
+			// wait battle server start and animation 
+			Sleep((wait_seconds - 1) * 1000);
 
+			//if (GameInfo::instance()->is_room_owner())
+			//	// notify battle server to start game 
+			//	Dispatcher::dispatch(ThreadId::N, "StartGame");
 
 			clog("GameCore Start ...");
 		}
@@ -243,8 +235,9 @@ namespace state
 		{
 			// do nothing 
 			Sleep(10);
-			/*c->Render->Fx++;
-			c->Render->Fy++;*/
+
+			//c->Render->Fx++;
+			//c->Render->Fy++;
 
 			// TODO: possible heartbeat here 
 		}
@@ -418,13 +411,17 @@ namespace state
 
 		void ToLoginServ::off(iNetIO* n)
 		{
-			if (n->Conn)
-				n->Conn->channel->close();
+			if (n->Conn)	// prevent crush caused by prepare state
+			{
+				n->Conn->stop(false);
+			}
 		}
 
 		IMPL_STATE(ToBattleServ)
 		void ToBattleServ::into(iNetIO* n)
 		{
+			clog("Netio into state ToBattleServer");
+
 			// battle server addr has stored in Config->RoomInfo and GameInfo->RoomInfo
 			auto sevaddr = Client::configer()["RoomInfo"]["SevAddr"].get<std::string>();
 			auto port = n->configer()["Config"]["NetIO"]["BattlePort"].get<int>();
@@ -435,6 +432,7 @@ namespace state
 			
 			// recorrect tcp client 
 			auto cli = n->Conn;
+			cli = new hv::TcpClient();
 
 			// reconstruct new connection 
 			int connfd = cli->createsocket(port, sevaddr.c_str());
@@ -442,6 +440,44 @@ namespace state
 #ifdef _DEBUG
 			assert(connfd >= 0);
 #endif // _DEBUG
+
+			cli->onConnection = [n](const hv::SocketChannelPtr& channel)
+			{
+				std::string peeraddr = channel->peeraddr();
+				std::string info;
+				if (channel->isConnected())
+					info = std::format("connected to {}, connfd:{}\n", peeraddr.c_str(), channel->fd());
+				else
+				{
+					info = std::format("disconnected to {}, connfd:{}\n", peeraddr.c_str(), channel->fd());
+
+					// change state into offline state 
+					n->State->into(state::net::Offline::instance());
+				}
+
+#ifdef _DEBUG
+				clog(info);
+				Dispatcher::dispatch(ThreadId::R, "NetLog", ArgsPackBuilder::create(std::move(info)));
+#endif // _DEBUG
+
+			};
+
+			cli->onMessage = [n](const hv::SocketChannelPtr& channel, hv::Buffer* buf)
+			{
+				std::string pack{ static_cast<char*>(buf->data()), buf->size() };
+
+#ifdef _DEBUG
+				// show net message on screen 
+				Dispatcher::dispatch(ThreadId::R, "NetLog", ArgsPackBuilder::create(pack));
+#endif // _DEBUG
+
+				if (n->State->in_state(state::net::ToLoginServ::instance()))
+					Protocol::response(Protocol::MsgFrom::LoginServer, pack);
+				else
+					Protocol::response(Protocol::MsgFrom::BattleServer, pack);
+			};
+
+			cli->start(false);
 
 		}
 
@@ -452,7 +488,7 @@ namespace state
 
 		void ToBattleServ::off(iNetIO* n)
 		{
-			n->Conn->channel->close();
+			n->Conn->stop(false);
 		}
 	}
 
@@ -511,17 +547,24 @@ namespace state
 		{
 			// perhaps does not need this state 
 			// FIXME::
+			u->pause();
 		}
 
 		void GatheringPower::on(iUserIO* u)
 		{
+			if (ExMessage exmsg; peekmessage(&exmsg, (BYTE)255U, true))
+				if (exmsg.message == WM_CHAR && toascii(exmsg.vkcode) == 0x20)
+				{
+					GameInfo::instance()->Strength++;
+				}
 		}
 
 		void GatheringPower::off(iUserIO* u)
 		{
+			u->resume();
+			Dispatcher::dispatch(ThreadId::C, "Launch");
 		}
-
-		
+	
 	}
 }
 
