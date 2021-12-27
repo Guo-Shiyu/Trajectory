@@ -1,7 +1,7 @@
 local module = {
 	StdoutLog = true,
 	
-	LoginServerAddr = "172.21.66.244",
+	LoginServerAddr = "172.21.66.215",
 	ActivePort = 24680,
 
 
